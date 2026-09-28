@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geoportal Mata Atlântica e Cerrado · Jaguariúna</title>
+<meta name="description" content="Geoportal do Plano Municipal de Mata Atlântica e Cerrado de Jaguariúna/SP: vegetação nativa, áreas de preservação, vetores de degradação, áreas prioritárias e ações de conservação e restauração.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Plano Municipal de Mata Atlântica e Cerrado — Geoportal">
+<meta property="og:description" content="Explore no mapa o diagnóstico da vegetação nativa de Jaguariúna/SP e as ações de conservação e restauração do município.">
+<meta property="og:url" content="https://mirianniz-debug.github.io/PlanoMataAtlantica/">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="images/brasao.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16232e; --ink-soft:#4a575f; --muted:#6b767c;
+    --paper:#eef1ea; --panel:#fbfcf8; --line:#d7dbcd; --line-strong:#c3c8b6;
+    --header-bg:#16232e; --hover:#e9ece0;
+    --forest:#1f7a44; --forest-dark:#14592f;
+    --fire:#b4441f; --water:#1d6fb8; --earth:#c1421f;
+    --chip:#e4e9dc;
+    --radius:9px;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Inter', -apple-system, "Segoe UI", sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, Consolas, monospace;
+    font-family:var(--font-body);
+  }
+  body.dark-mode{
+    --ink:#e6ebe3; --ink-soft:#b0b9af; --muted:#8d978d;
+    --paper:#10151a; --panel:#1a2127; --line:#2b343b; --line-strong:#3c4750;
+    --header-bg:#0b1114; --hover:#232c32; --chip:#26303a;
+    --forest:#4cbf7c; --forest-dark:#6fd297; --fire:#e2743f; --water:#5aa6e6;
+  }
+  body.dark-mode .leaflet-tile-pane{filter:brightness(.62) contrast(.92) invert(1) hue-rotate(180deg);}
+  body.dark-mode.satellite-active .leaflet-tile-pane{filter:none;}
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);}
+  body{display:flex;flex-direction:column;overflow:hidden;}
+  a{color:var(--water);}
+
+  /* ---------- Cabeçalho (identidade da Prefeitura) ---------- */
+  header{display:flex;align-items:center;gap:14px;padding:11px 20px;background:var(--header-bg);color:#eef1ea;position:relative;z-index:1000;}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+    background:linear-gradient(90deg,#1f7a44 0 34%,#c98a1f 34% 67%,#1d6fb8 67% 100%);}
+  .crest{width:42px;height:42px;flex:0 0 auto;border-radius:9px;background:#eef1ea;padding:3px;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+  .crest img{width:100%;height:100%;object-fit:contain;display:block;}
+  header h1 .short{display:none;}
+  .titles{display:flex;flex-direction:column;line-height:1.15;flex:1 1 auto;min-width:0;}
+  header h1{font:600 17px/1.2 var(--font-display);margin:0;color:#fbfcf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  header p{margin:3px 0 0;font:500 10.5px/1 var(--font-mono);color:#9fb3ac;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hbtn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
+    background:rgba(238,241,234,.08);border:1px solid rgba(238,241,234,.28);border-radius:50%;cursor:pointer;color:#eef1ea;font:600 14px var(--font-display);}
+  .hbtn:hover{background:rgba(238,241,234,.18);}
+  #toggleSidebar{white-space:nowrap;display:none;background:rgba(238,241,234,.08);border:1px solid rgba(238,241,234,.28);color:#eef1ea;border-radius:7px;padding:7px 11px;font:500 12.5px var(--font-body);cursor:pointer;}
+
+  #app{flex:1;display:flex;min-height:0;position:relative;}
+
+  /* ---------- Painel lateral ---------- */
+  #sidebar{width:356px;flex:0 0 auto;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:900;min-height:0;}
+  #tabs{display:flex;gap:2px;padding:10px 10px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex:0 0 auto;}
+  #tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:1 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 7px 9px;border:none;background:transparent;cursor:pointer;
+    color:var(--ink-soft);font:600 11px/1.1 var(--font-body);border-bottom:2.5px solid transparent;border-radius:7px 7px 0 0;}
+  .tab svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6;}
+  .tab:hover{background:var(--hover);color:var(--ink);}
+  .tab.active{color:var(--forest-dark);border-bottom-color:var(--forest);}
+  #tabBody{flex:1;overflow-y:auto;padding:16px 16px 28px;}
+  .pane{display:none;} .pane.active{display:block;}
+  .pane h2{font:600 19px/1.25 var(--font-display);margin:2px 0 6px;color:var(--ink);}
+  .lead{font:400 13px/1.55 var(--font-body);color:var(--ink-soft);margin:0 0 14px;}
+  .pane h3{font:600 13px var(--font-body);margin:20px 0 8px;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .pane h3::after{content:"";flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line-strong) 0 4px,transparent 4px 8px);}
+  .pane p.txt{font:400 12.5px/1.55 var(--font-body);color:var(--ink-soft);margin:0 0 10px;}
+  .src{font:400 10px/1.4 var(--font-mono);color:var(--muted);margin-top:4px;}
+
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 4px;}
+  .kpi{background:var(--chip);border-radius:10px;padding:10px 11px;}
+  .kpi .n{font:600 21px/1 var(--font-mono);color:var(--forest-dark);}
+  .kpi .n small{font-size:12px;font-weight:500;margin-left:2px;}
+  .kpi .l{font:500 11.5px/1.3 var(--font-body);color:var(--ink-soft);margin-top:5px;}
+  .kpi.fire .n{color:var(--fire);} .kpi.water .n{color:var(--water);}
+  .kpi.wide{grid-column:1 / -1;}
+
+  .layer-row{display:flex;align-items:flex-start;gap:10px;padding:7px 8px;border-radius:8px;cursor:pointer;user-select:none;}
+  .layer-row:hover{background:var(--hover);}
+  .layer-row input{appearance:none;-webkit-appearance:none;width:17px;height:17px;margin-top:1px;flex:0 0 auto;border:1.6px solid #b7bcaa;border-radius:5px;
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:var(--panel);}
+  .layer-row input:checked{background:var(--c);border-color:var(--c);}
+  .layer-row input:checked::after{content:"";width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px);}
+  .layer-row .nm{font:600 13px/1.3 var(--font-body);color:var(--ink);}
+  .layer-row .fs{font:400 10px/1.35 var(--font-mono);color:var(--muted);opacity:.85;margin-top:2px;}
+  .layer-row .ds{font:400 11px/1.35 var(--font-body);color:var(--muted);margin-top:1px;}
+
+  .bars .br{display:grid;grid-template-columns:92px 1fr 44px;align-items:center;gap:8px;margin:5px 0;font:500 11.5px var(--font-body);color:var(--ink);}
+  .bars .track{height:8px;background:var(--line);border-radius:4px;overflow:hidden;}
+  .bars .fill{height:100%;border-radius:4px;background:var(--c,var(--forest));}
+  .bars .v{font:600 11.5px var(--font-mono);text-align:right;color:var(--ink);}
+  .bars .sub{font:500 10.5px var(--font-body);color:var(--muted);margin:10px 0 2px;}
+
+  .prog{background:var(--chip);border-radius:12px;padding:13px 14px 14px;margin:4px 0 12px;}
+  .prog p{font:400 12.5px/1.55 var(--font-body);color:var(--ink);margin:0 0 10px;}
+  .prog .partners{font-size:11.5px;color:var(--ink-soft);margin:8px 0 12px;}
+  .pillars{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;}
+  .pillars li{display:flex;gap:9px;align-items:flex-start;font:400 12px/1.45 var(--font-body);color:var(--ink-soft);}
+  .pillars li i{width:9px;height:9px;border-radius:50%;background:var(--c);flex:0 0 auto;margin-top:5px;}
+  .pillars li b{color:var(--ink);font-weight:600;}
+  .btn-link{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:8px;background:var(--header-bg);color:#eef1ea;
+    font:600 12.5px var(--font-body);text-decoration:none;margin:6px 0 4px;}
+  .btn-link:hover{filter:brightness(1.25);}
+  body.dark-mode .btn-link{background:#2b3a44;}
+  .phase{border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:12px 13px;margin:10px 0;background:var(--panel);}
+  .ph-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .ph-tag{font:700 11px var(--font-body);color:#fff;background:var(--c);padding:3px 9px;border-radius:12px;}
+  .ph-when{font:500 11px var(--font-mono);color:var(--muted);}
+  .ph-title{font:600 15px/1.3 var(--font-display);color:var(--ink);margin:6px 0 6px;}
+  .phase p{font:400 12.5px/1.55 var(--font-body);color:var(--ink-soft);margin:0 0 10px;}
+  .phase p b{color:var(--ink);}
+  .ph-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+  .ph-nums div{background:var(--chip);border-radius:8px;padding:7px 8px;}
+  .ph-nums b{display:block;font:600 13px/1.1 var(--font-mono);color:var(--c);white-space:nowrap;letter-spacing:-.02em;}
+  body.dark-mode .ph-nums b{filter:brightness(1.6);}
+  .ph-nums span{display:block;font:500 10.5px/1.25 var(--font-body);color:var(--ink-soft);margin-top:3px;}
+  .ph-go{width:100%;padding:8px;border-radius:7px;border:1.5px solid var(--c);background:transparent;color:var(--ink);font:600 12px var(--font-body);cursor:pointer;}
+  .ph-go:hover{background:var(--c);color:#fff;}
+  .fase-label{background:transparent;border:none;}
+  .fase-label div{display:inline-flex;align-items:center;white-space:nowrap;transform:translate(-50%,-50%);
+    background:var(--c);color:#fff;font:700 12px var(--font-body);padding:5px 11px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.35);border:2px solid #fff;cursor:pointer;}
+  .prio{display:flex;gap:11px;border:1px solid var(--line);border-radius:10px;padding:12px 13px;margin:12px 0;background:var(--panel);--c:#c02424;}
+  .prio-n{width:26px;height:26px;border-radius:50%;background:var(--c);color:#fff;font:700 13px var(--font-mono);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .prio-t{font:600 14.5px/1.3 var(--font-display);color:var(--ink);margin:2px 0 6px;}
+  .prio p{font:400 12.5px/1.55 var(--font-body);color:var(--ink-soft);margin:0 0 8px;}
+  .prio p b{color:var(--ink);}
+  .note{font:400 12px/1.5 var(--font-body);color:var(--ink-soft);margin:6px 0 8px;}
+  .bars.wide .br{grid-template-columns:104px 1fr 62px;}
+  .callout .links{margin-top:5px;font-size:11.5px;}
+  .fontes{margin-top:22px;border-top:1px solid var(--line);padding-top:10px;}
+  .fontes summary{cursor:pointer;font:600 11.5px var(--font-body);color:var(--muted);list-style:none;}
+  .fontes summary::before{content:"ⓘ  ";}
+  .fontes ul{margin:8px 0 0;padding-left:16px;font:400 11px/1.5 var(--font-body);color:var(--ink-soft);}
+  .fontes li{margin-bottom:4px;}
+  .mini{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .mini-row{display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);cursor:pointer;
+    font:400 12px/1.4 var(--font-body);color:var(--ink-soft);}
+  .mini-row b{color:var(--ink);font-weight:600;font-size:12.5px;}
+  .mini-row:hover{background:var(--hover);}
+  .mini-row .mi{width:30px;height:30px;border-radius:50%;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex:0 0 auto;}
+  .mini-row .arrow{margin-left:auto;font-size:20px;color:var(--muted);}
+  .callout{border-left:3px solid var(--fire);background:var(--chip);border-radius:0 8px 8px 0;padding:9px 11px;font:400 12px/1.5 var(--font-body);color:var(--ink-soft);margin:10px 0;}
+  .callout.green{border-left-color:var(--forest);}
+  .callout b{color:var(--ink);}
+
+  details.leg{border:1px solid var(--line);border-radius:8px;margin:6px 0;background:var(--panel);}
+  details.leg summary{cursor:pointer;padding:8px 10px;font:600 12px var(--font-body);color:var(--ink);list-style:none;display:flex;justify-content:space-between;gap:8px;}
+  details.leg summary::after{content:"+";color:var(--muted);}
+  details.leg[open] summary::after{content:"–";}
+  details.leg div{padding:0 10px 10px;font:400 11.5px/1.5 var(--font-body);color:var(--ink-soft);}
+
+  .basemap{border-top:1px solid var(--line);padding:10px 16px 12px;flex:0 0 auto;}
+  .basemap .t{font:600 11px var(--font-body);color:var(--muted);margin-bottom:6px;}
+  .basemap-row{display:flex;gap:6px;}
+  .basemap-btn{flex:1;padding:6px 4px;font:500 11.5px var(--font-body);text-align:center;border:1px solid var(--line);border-radius:7px;background:var(--panel);cursor:pointer;color:var(--ink);}
+  .basemap-btn.active{background:var(--header-bg);color:#eef1ea;border-color:var(--header-bg);}
+
+  /* ---------- Gráfico de queimadas (pequenos múltiplos) ---------- */
+  .chart{position:relative;margin:4px 0 2px;}
+  .chart svg{display:block;width:100%;height:auto;overflow:visible;}
+  .chart .yr{font:600 11px var(--font-mono);fill:var(--ink);}
+  .chart .tot{font:500 10.5px var(--font-mono);fill:var(--muted);}
+  .chart .mo{font:500 9.5px var(--font-mono);fill:var(--muted);}
+  .chart .base{stroke:var(--line-strong);stroke-width:1;}
+  .chart .bar{fill:var(--fire);}
+  .chart .hit{fill:transparent;cursor:default;}
+  .chart .hit:hover + .bar, .chart .bar.hl{opacity:.75;}
+  .tip{position:absolute;pointer-events:none;background:var(--header-bg);color:#eef1ea;font:500 11px var(--font-mono);padding:4px 7px;border-radius:5px;white-space:nowrap;transform:translate(-50%,-110%);display:none;z-index:5;}
+  .tbl-toggle{background:none;border:none;color:var(--water);font:500 11px var(--font-body);cursor:pointer;padding:2px 0;}
+  table.data{width:100%;border-collapse:collapse;font:400 10.5px var(--font-mono);margin-top:6px;}
+  table.data th,table.data td{border-bottom:1px solid var(--line);padding:3px 4px;text-align:right;color:var(--ink);}
+  table.data th:first-child,table.data td:first-child{text-align:left;}
+
+  /* ---------- Mapa e sobreposições ---------- */
+  #map{flex:1;min-width:0;position:relative;background:var(--paper);}
+  .leaflet-popup-content-wrapper{border-radius:9px;font-family:var(--font-body);background:var(--panel);color:var(--ink);}
+  .leaflet-popup-tip{background:var(--panel);}
+  .leaflet-popup-content{margin:12px 14px;max-width:290px;}
+  .pt{font:600 13.5px var(--font-body);margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid var(--line);color:var(--ink);}
+  .pr{font-size:12px;margin:3px 0;display:flex;justify-content:space-between;gap:12px;color:var(--ink);}
+  .pr b{color:var(--ink-soft);font-weight:500;}
+  .pr .v{font-family:var(--font-mono);font-size:11.5px;text-align:right;}
+  .ptxt{font:400 12px/1.5 var(--font-body);color:var(--ink-soft);margin:4px 0;}
+  .pimg{width:100%;display:block;border-radius:6px;margin:6px 0 2px;cursor:zoom-in;}
+  .pimg{max-height:170px;object-fit:cover;}
+  .pgal{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:5px;margin:6px 0 2px;}
+  .pgal .pimg{height:86px;margin:0;}
+  .pcap{font:italic 400 10.5px var(--font-body);color:var(--muted);margin-bottom:4px;}
+  .pbadge{display:inline-flex;align-items:center;gap:6px;font:600 11.5px var(--font-body);padding:3px 8px;border-radius:12px;background:var(--chip);color:var(--ink);margin:2px 0 4px;}
+  .pbadge i{width:9px;height:9px;border-radius:50%;background:var(--c);display:block;}
+  .leaflet-image-layer.pix{image-rendering:pixelated;}
+
+  #legend{position:absolute;top:14px;left:14px;z-index:800;background:rgba(251,252,248,.95);border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 3px 12px rgba(0,0,0,.14);padding:10px 12px;max-width:240px;max-height:calc(100% - 150px);overflow-y:auto;}
+  body.dark-mode #legend{background:rgba(26,33,39,.95);}
+  #legend .lt{font:600 11px var(--font-body);color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;gap:10px;cursor:pointer;}
+  #legend .solo{margin-top:5px;}
+  #legend .lg{font:600 11px var(--font-body);color:var(--ink);margin:7px 0 2px;}
+  #legend .li{display:flex;align-items:center;gap:8px;padding:2px 0;font:400 11.5px var(--font-body);color:var(--ink);}
+  #legend .sw{width:14px;height:14px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;}
+  #legend .sw i{display:block;}
+  #legend .sw.f i{width:13px;height:11px;border-radius:3px;}
+  #legend .sw.l i{width:14px;height:0;border-top:2.4px solid;}
+  #legend .sw.p i{width:9px;height:9px;border-radius:50%;border:1.4px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);}
+  #legend .sw.c i{width:13px;height:13px;border-radius:50%;border:2px solid;}
+  #legend.min .body{display:none;}
+
+  #mapCredit{position:absolute;right:58px;bottom:26px;z-index:800;background:rgba(22,35,46,.82);color:#eef1ea;padding:5px 11px;border-radius:6px;pointer-events:none;
+    font:italic 600 10.5px var(--font-display);}
+  #northArrow{position:absolute;top:14px;right:14px;z-index:800;width:34px;height:34px;background:rgba(251,252,248,.92);border-radius:50%;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;}
+  #statusbar{position:absolute;left:12px;bottom:46px;z-index:800;display:flex;gap:10px;background:rgba(22,35,46,.88);color:#dfe7de;
+    font:500 11px var(--font-mono);padding:6px 11px;border-radius:7px;pointer-events:none;}
+  #statusbar .lbl{color:#8fa89f;margin-right:4px;}
+
+  .ico-marker{display:flex;align-items:center;justify-content:center;}
+  .ico-marker .dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;
+    background:var(--c);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);}
+
+  /* ---------- Janela "Sobre" e ampliação de imagem ---------- */
+  .overlay{position:fixed;inset:0;z-index:3000;background:rgba(16,21,26,.6);display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .overlay.open{opacity:1;pointer-events:auto;}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:600px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+  .modal .mh{display:flex;gap:12px;align-items:flex-start;padding:20px 22px 14px;border-bottom:1px solid var(--line);}
+  .modal .mh h2{font:600 19px/1.25 var(--font-display);margin:0 0 3px;color:var(--ink);}
+  .modal .mh p{font:500 11px var(--font-mono);color:var(--muted);margin:0;}
+  .xbtn{margin-left:auto;flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink-soft);cursor:pointer;font-size:15px;}
+  .modal .mb{padding:16px 22px 8px;font:400 13px/1.6 var(--font-body);color:var(--ink);}
+  .modal .mb p{margin:0 0 12px;}
+  .modal .mb ul{margin:0 0 12px;padding-left:18px;color:var(--ink-soft);}
+  .modal .mf{padding:6px 22px 20px;}
+  .modal .mf button{width:100%;padding:11px;border-radius:8px;border:none;background:var(--forest);color:#fff;font:600 13px var(--font-body);cursor:pointer;}
+  #lightbox img{max-width:94vw;max-height:84vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  #lightbox .xbtn{position:absolute;top:18px;right:18px;background:rgba(0,0,0,.5);color:#fff;border-color:rgba(255,255,255,.4);}
+  #lightbox .cap{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#eef1ea;font:italic 400 12.5px var(--font-body);text-align:center;max-width:90vw;}
+
+  @media (max-width:760px){
+    header{padding:9px 12px;gap:8px;}
+    header h1{font-size:14px;} header p{display:none;}
+    header h1 .full{display:none;} header h1 .short{display:inline;}
+    .crest{width:34px;height:34px;}
+    .hbtn{width:28px;height:28px;}
+    #toggleSidebar{display:inline-block;padding:6px 9px;}
+    #sidebar{position:absolute;top:0;left:0;bottom:0;width:88vw;max-width:370px;transform:translateX(-100%);transition:transform .22s;box-shadow:6px 0 18px rgba(0,0,0,.18);}
+    #sidebar.open{transform:translateX(0);}
+    #legend{top:10px;left:10px;max-width:190px;padding:8px 10px;max-height:45%;}
+    #mapCredit{right:50px;bottom:24px;font-size:9px;max-width:55vw;}
+    #statusbar{display:none;}
+    #northArrow{width:28px;height:28px;top:10px;right:10px;}
+  }
+  @media (max-width:400px){ #toggleSidebar .ts{display:none;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="crest"><img src="images/brasao.png" alt="Brasão de Jaguariúna"></div>
+  <div class="titles">
+    <h1><span class="full">Plano Municipal de Mata Atlântica e Cerrado</span><span class="short">Mata Atlântica e Cerrado</span></h1>
+    <p>Jaguariúna/SP · Departamento de Agropecuária e Meio Ambiente</p>
+  </div>
+  <button class="hbtn" id="aboutBtn" title="Sobre o Plano" aria-label="Sobre o Plano">i</button>
+  <button class="hbtn" id="themeToggle" title="Alternar modo escuro" aria-label="Alternar modo escuro">
+    <svg id="iconMoon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#eef1ea" stroke-width="1.6"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+    <svg id="iconSun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#eef1ea" stroke-width="1.6" style="display:none"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.85 1.85M17.55 17.55l1.85 1.85M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.85-1.85M17.55 6.45l1.85-1.85"/></svg>
+  </button>
+  <button id="toggleSidebar">☰ <span class="ts">Painel</span></button>
+</header>
+
+<div id="app">
+  <aside id="sidebar">
+    <nav id="tabs" role="tablist">
+      <button class="tab active" data-tab="visao" role="tab"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Município</button>
+      <button class="tab" data-tab="vegetacao" role="tab"><svg viewBox="0 0 24 24"><path d="M12 21v-7"/><path d="M12 14c-4 0-7-3-7-7 4 0 7 3 7 7zM12 14c4 0 7-3 7-7-4 0-7 3-7 7z"/></svg>Vegetação</button>
+      <button class="tab" data-tab="degradacao" role="tab"><svg viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-3 2-4 2-7 1 1 2 2 3 3 0-2-1-4 0-6z"/></svg>Ameaças</button>
+      <button class="tab" data-tab="prioridades" role="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>Prioridades</button>
+      <button class="tab" data-tab="acoes" role="tab"><svg viewBox="0 0 24 24"><path d="M5 20h14"/><path d="M8 20v-5l-3-3M16 20v-7l3-3M12 20V8"/><circle cx="12" cy="6" r="2"/></svg>Ações</button>
+    </nav>
+
+    <div id="tabBody">
+      <!-- ===================== 1. MUNICÍPIO ===================== -->
+      <section class="pane active" id="pane-visao" data-fontes="Indicadores: Inventário Florestal SP (2020); ANA/BHO; SiCAR-SP (08/06/2026); Plano, item 1">
+        <h2>O território</h2>
+        <p class="lead">14.145 ha na Região Metropolitana de Campinas, onde a Mata Atlântica encontra o Cerrado. Três rios drenam o município: Jaguari, Camanducaia e Atibaia.</p>
+        <div class="kpis">
+          <div class="kpi"><div class="n">19,5<small>%</small></div><div class="l">com vegetação nativa (2.760 ha)</div></div>
+          <div class="kpi water"><div class="n" id="kNasc">—</div><div class="l">nascentes mapeadas</div></div>
+          <div class="kpi water"><div class="n">95<small>%</small></div><div class="l">da água da cidade vem do Rio Jaguari</div></div>
+          <div class="kpi"><div class="n">462</div><div class="l">imóveis rurais no CAR</div></div>
+        </div>
+        <h3>Camadas</h3>
+        <div class="layers" data-layers="subbacias,rios,nascentes,zonas"></div>
+        <h3>Uso e ocupação do solo</h3>
+        <div class="bars wide">
+          <div class="br" style="--c:#d77f98"><span>Urbana</span><div class="track"><div class="fill" style="width:39.2%"></div></div><span class="v">5.541 ha</span></div>
+          <div class="br" style="--c:#dcb04a"><span>Expansão urbana</span><div class="track"><div class="fill" style="width:40.5%"></div></div><span class="v">5.725 ha</span></div>
+          <div class="br" style="--c:#7fae5a"><span>Rural</span><div class="track"><div class="fill" style="width:20.4%"></div></div><span class="v">2.880 ha</span></div>
+        </div>
+        <p class="note">80% do território é urbano ou de expansão urbana. A impermeabilização do solo aumenta o risco de enchentes, erosão e alagamentos.</p>
+      </section>
+
+      <!-- ===================== 2. VEGETAÇÃO ===================== -->
+      <section class="pane" id="pane-vegetacao" data-fontes="APP florestada por bacia: Plano, Tabela 2 (DAMA, 2026)|APA: Lei Estadual 7.438/1991|Reserva Legal: SiCAR-SP (08/06/2026)">
+        <h2>Vegetação e áreas protegidas</h2>
+        <p class="lead">A Mata Atlântica (Floresta Estacional Semidecidual) ocupa 19,5% do município, sobretudo ao longo dos rios e no leste.</p>
+        <h3>Camadas</h3>
+        <div class="layers" data-layers="remanescentes,app,rppn"></div>
+        <h3>APP com floresta</h3>
+        <div class="bars">
+          <div class="sub">Rio principal (faixa de 50 m)</div>
+          <div class="br"><span>Jaguari</span><div class="track"><div class="fill" style="width:34.53%"></div></div><span class="v">35%</span></div>
+          <div class="br"><span>Camanducaia</span><div class="track"><div class="fill" style="width:31.8%"></div></div><span class="v">32%</span></div>
+          <div class="br"><span>Atibaia</span><div class="track"><div class="fill" style="width:24.47%"></div></div><span class="v">24%</span></div>
+          <div class="sub">Afluentes e nascentes (30 m e 50 m)</div>
+          <div class="br"><span>Camanducaia</span><div class="track"><div class="fill" style="width:23.77%"></div></div><span class="v">24%</span></div>
+          <div class="br"><span>Atibaia</span><div class="track"><div class="fill" style="width:23.01%"></div></div><span class="v">23%</span></div>
+          <div class="br"><span>Jaguari</span><div class="track"><div class="fill" style="width:22.76%"></div></div><span class="v">23%</span></div>
+        </div>
+        <div class="callout green">Mais de <b>dois terços das APPs estão sem floresta</b>: são o principal alvo da restauração.</div>
+        <h3>Áreas protegidas</h3>
+        <div class="kpis">
+          <div class="kpi"><div class="n">8.886<small>ha</small></div><div class="l">na APA Piracicaba/ Juqueri-Mirim (mananciais do Cantareira)</div></div>
+          <div class="kpi"><div class="n">26,7<small>ha</small></div><div class="l">na RPPN Estância Jatobá, reserva particular</div></div>
+          <div class="kpi"><div class="n">747<small>ha</small></div><div class="l">de Reserva Legal declarada no CAR</div></div>
+          <div class="kpi"><div class="n">1.807<small>ha</small></div><div class="l">de vegetação nativa nos imóveis rurais</div></div>
+        </div>
+      </section>
+
+      <!-- ===================== 3. AMEAÇAS ===================== -->
+      <section class="pane" id="pane-degradacao" data-fontes="Indicadores e gráfico: INPE, PRODES/TerraBrasilis (2026); MapBiomas Fogo, Coleção 10 (acesso em 16/06/2026)">
+        <h2>Ameaças à vegetação</h2>
+        <p class="lead">As principais pressões são as <b>queimadas</b> e a <b>expansão urbana</b>, que alimenta a especulação imobiliária.</p>
+        <div class="kpis">
+          <div class="kpi fire"><div class="n">2,49<small>km²</small></div><div class="l">de floresta nativa suprimida de 2004 a 2024</div></div>
+          <div class="kpi fire"><div class="n" id="kFogo">380<small>ha</small></div><div class="l">queimados em 2025, o maior valor da série</div></div>
+        </div>
+        <h3>Camadas</h3>
+        <div class="layers" data-layers="prodes,validacao,fogo2025,incendio"></div>
+        <h3>Desmatamento recente (2019–2024)</h3>
+        <p class="note">Alertas de satélite do INPE conferidos pela Prefeitura em imagens históricas e em campo. No mapa, aparecem com localização aproximada.</p>
+        <div class="bars" id="valBars"></div>
+        <h3>Área queimada por mês</h3>
+        <div class="chart" id="fireChart"><div class="tip" id="fireTip"></div></div>
+        <button class="tbl-toggle" id="fireTblBtn">Ver tabela</button>
+        <div id="fireTbl" hidden></div>
+        <div class="callout"><b>Incêndio de agosto/2025:</b> cerca de 203 ha queimados, incluindo ~21 ha já restaurados no Haras Maripá.</div>
+        <div class="callout"><b>Especulação imobiliária:</b> duas áreas suprimidas seguiam sem uso na vistoria de jun/2026. Loteamentos clandestinos também ameaçam APPs e mananciais.</div>
+      </section>
+
+      <!-- ===================== 4. PRIORIDADES ===================== -->
+      <section class="pane" id="pane-prioridades">
+        <h2>Onde priorizar</h2>
+        <p class="lead">Dois critérios que se completam: a vulnerabilidade do solo à erosão e a proteção das nascentes.</p>
+        <h3>Camadas</h3>
+        <div class="layers" data-layers="vulnerabilidade,nasc_protecao,subbacias_contorno,app,remanescentes"></div>
+        <div class="prio">
+          <div class="prio-n">1</div>
+          <div>
+            <div class="prio-t">Solo mais vulnerável à erosão</div>
+            <p>As classes alta e muito alta se concentram no <b>sudeste da Bacia do Jaguari</b>, a montante da captação que abastece 95% da cidade.</p>
+          </div>
+        </div>
+        <div class="prio" style="--c:#0891b2">
+          <div class="prio-n">2</div>
+          <div>
+            <div class="prio-t">Entorno das nascentes</div>
+            <p>O raio de <b>50 m</b> em volta de cada uma das <b id="kNasc2">—</b> nascentes é APP e deve manter vegetação nativa. Onde estiver degradado, recompor é prioridade.</p>
+          </div>
+        </div>
+        <div class="callout green"><b>Toda APP e todo fragmento florestal importam</b> para a preservação, a prevenção do desmatamento e a recuperação florestal. Ligue as camadas de APP e de remanescentes para vê-los.</div>
+      </section>
+
+      <!-- ===================== 5. AÇÕES ===================== -->
+      <section class="pane" id="pane-acoes" data-fontes="Indicadores e textos: Plano, itens 5.1 a 5.4 (DAMA, 2026)|Hectares restaurados: calculados a partir dos polígonos do Programa Bacias">
+        <h2>Ações em andamento</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="n" id="kHa">—</div><div class="l">hectares restaurados</div></div>
+          <div class="kpi"><div class="n" id="kBio">—</div><div class="l">biodigestores de saneamento rural</div></div>
+          <div class="kpi"><div class="n">60<small>mil</small></div><div class="l">mudas por ano no Viveiro Municipal</div></div>
+          <div class="kpi"><div class="n">100</div><div class="l">espécies nativas no Matrizeiro</div></div>
+        </div>
+        <h3>Camadas</h3>
+        <div class="layers" data-layers="fases,restauracao,biodigestores,equipamentos,conectividade,corredores"></div>
+
+        <h3>Programa Bacias Jaguariúna</h3>
+        <div class="prog">
+          <p>Programa municipal (Lei 2.218/2014) para <b>conservar e recuperar os mananciais</b>. Frentes de trabalho:</p>
+          <ul class="pillars">
+            <li><i style="--c:#1f7a44"></i><span>Restauração florestal de APPs e nascentes</span></li>
+            <li><i style="--c:#8a6d4a"></i><span>Conservação do solo em propriedades rurais</span></li>
+            <li><i style="--c:#c98a1f"></i><span>Saneamento rural com biodigestores</span></li>
+            <li><i style="--c:#1d6fb8"></i><span>Pagamento por Serviços Ambientais (1ª fase)</span></li>
+          </ul>
+          <p class="partners">Parceiros: TNC, AMBEV, Embrapa Meio Ambiente, Agência das Bacias PCJ, Consórcio PCJ e ANA.</p>
+          <a class="btn-link" href="https://mirianniz-debug.github.io/ProgramaBaciasJaguariuna/" target="_blank" rel="noopener">Abrir o geoportal do Programa Bacias <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <div class="phase" style="--c:#1f7a44">
+          <div class="ph-head"><span class="ph-tag">1ª fase</span><span class="ph-when">2014 – 2021</span></div>
+          <div class="ph-title">Área Piloto · Bacia do Jaguari</div>
+          <p>Região de maior vulnerabilidade à erosão, a montante da captação de água.</p>
+          <div class="ph-nums">
+            <div><b>3.250 ha</b><span>Área Piloto</span></div>
+            <div><b id="ph1ha">—</b><span>restaurados</span></div>
+            <div><b>R$ 100 mil</b><span>em PSA</span></div>
+          </div>
+          <button class="ph-go" data-fase="1">Ver no mapa</button>
+        </div>
+
+        <div class="phase" style="--c:#0f8a7e">
+          <div class="ph-head"><span class="ph-tag">2ª fase</span><span class="ph-when">2022 – hoje</span></div>
+          <div class="ph-title">Área de Interesse · Bacia do Camanducaia</div>
+          <p>21 proprietários interessados; 53 ha de APP degradada a recuperar. Inclui saneamento rural.</p>
+          <div class="ph-nums">
+            <div><b>2.900 ha</b><span>Área de Interesse</span></div>
+            <div><b id="ph2ha">—</b><span>restaurados</span></div>
+            <div><b id="ph2bio">—</b><span>biodigestores</span></div>
+          </div>
+          <button class="ph-go" data-fase="2">Ver no mapa</button>
+        </div>
+
+        <div class="callout green"><b>Referência estadual:</b> em 2026 a CETESB escolheu a restauração do Haras Maripá como modelo. As metas de 20 anos foram atingidas em cerca de 5.
+          <div class="links"><a href="https://www.sosma.org.br/artigos/restauracao-florestal-eficiente-ja-e-realidade-e-brasil-precisa-escalar-esse-modelo" target="_blank" rel="noopener">SOS Mata Atlântica</a> · <a href="https://www.correiodamanha.com.br/nacional/sao-paulo/campinas/regiao-de-campinas/2026/04/279574-projeto-em-jaguariuna-recupera-area-e-vira-referencia.html" target="_blank" rel="noopener">Correio da Manhã</a> · <a href="https://ojornalrmc.com.br/jaguariuna-reflorestamento-de-fazenda-vira-modelo-estadual/" target="_blank" rel="noopener">O Jornal RMC</a> · <a href="https://horacampinas.com.br/recuperacao-ambiental-em-fazenda-de-jaguariuna-vira-exemplo-no-estado/" target="_blank" rel="noopener">Hora Campinas</a></div></div>
+
+        <h3>Outras ações</h3>
+        <div class="mini">
+          <button class="mini-row" data-go="viveiro"><span class="mi" style="--c:#2f7d4a">🌱</span><span><b>Viveiro Municipal</b><br>Doação de mudas à população, seg. a sex., 7h às 16h.</span><span class="arrow">›</span></button>
+          <button class="mini-row" data-go="matrizeiro"><span class="mi" style="--c:#7a5a2e">🌳</span><span><b>Matrizeiro de Sementes</b><br>600 árvores de 100 espécies nativas (2012).</span><span class="arrow">›</span></button>
+          <button class="mini-row" data-go="conectividade"><span class="mi" style="--c:#22a35a">⇄</span><span><b>Reconecta RMC</b><br>Corredores ecológicos entre os municípios da RMC.</span><span class="arrow">›</span></button>
+        </div>
+
+        <details class="leg"><summary>Legislação municipal</summary><div>
+          <b>Planejamento:</b> Lei Orgânica 01/1990 · LC 373/2022 (Plano Diretor) · LC 409/2024 (Uso e Ocupação) · LC 97/2004 (Parcelamento) · LC 101/2005 (Obras) · LC 134/2007 (Posturas)<br><br>
+          <b>Gestão ambiental:</b> Lei 1.239/1999 (COMDEMA) · Lei 1.530/2004 (Complexo Ambiental) · Lei 2.108/2012 (FMMA) · Lei 2.249/2014 (ICMS Ecológico)<br><br>
+          <b>Vegetação e mananciais:</b> Lei 2.003/2010 (madeira legal) · LC 189/2011 e LC 218/2012 (arborização) · Lei 2.065/2011 (Educação Ambiental) · Lei 2.082/2012 (mananciais) · Leis 2.218/2014 e 2.301/2015 (Programa Bacias)
+        </div></details>
+      </section>
+    </div>
+
+    <div class="basemap">
+      <div class="t">Mapa base</div>
+      <div class="basemap-row">
+        <div class="basemap-btn active" data-base="street">Ruas</div>
+        <div class="basemap-btn" data-base="satellite">Satélite</div>
+        <div class="basemap-btn" data-base="terrain">Relevo</div>
+      </div>
+    </div>
+  </aside>
+
+  <div id="map">
+    <div id="legend"><div class="lt" id="legendToggle"><span>Legenda</span><span id="legendSign">–</span></div><div class="body" id="legendBody"></div></div>
+    <div id="northArrow"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3 L16 15 L12 12 L8 15 Z" fill="#16232e"/><text x="12" y="23" font-size="7" text-anchor="middle" fill="#16232e" font-family="IBM Plex Mono, monospace">N</text></svg></div>
+    <div id="mapCredit">Elaboração cartográfica: Engª Ambiental Mirian Niz</div>
+    <div id="statusbar"><span><span class="lbl">LAT</span><span id="roLat">—</span></span><span><span class="lbl">LON</span><span id="roLon">—</span></span><span><span class="lbl">ZOOM</span><span id="roZoom">—</span></span></div>
+  </div>
+</div>
+
+<!-- Janela "Sobre o Plano" -->
+<div class="overlay" id="aboutOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="mh">
+      <div class="crest" style="width:40px;height:40px"><img src="images/brasao.png" alt=""></div>
+      <div><h2 id="aboutTitle">Plano Municipal de Mata Atlântica e Cerrado</h2><p>Prefeitura de Jaguariúna · Resolução COMDEMA nº 07/2017 · atualização 2026</p></div>
+      <button class="xbtn" id="aboutClose" aria-label="Fechar">✕</button>
+    </div>
+    <div class="mb">
+      <p>Mapa interativo com as principais informações do Plano, que orienta a conservação e a recuperação da vegetação nativa de Jaguariúna.</p>
+      <p><b>Como usar:</b> escolha uma aba no painel. Cada aba liga as camadas do seu tema. Clique nos elementos do mapa para ver detalhes e fotos.</p>
+      <details class="leg"><summary>Fontes dos dados</summary><div id="aboutFontes"></div></details>
+      <p style="color:var(--muted);font-size:11.5px;margin-top:12px">Limites aproximados; não substituem levantamentos oficiais. Elaboração: Departamento de Agropecuária e Meio Ambiente (DAMA). Equipe técnica: Engª Mirian Y. K. Niz, Engº Irineu Gastaldo Jr. e Engª Aline G. Catão.</p>
+    </div>
+    <div class="mf"><button id="aboutGo">Explorar o mapa</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="lightbox" role="dialog" aria-modal="true">
+  <button class="xbtn" id="lbClose" aria-label="Fechar">✕</button>
+  <img id="lbImg" alt="">
+  <div class="cap" id="lbCap"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+Promise.all([fetch('data/dados.json').then(r=>r.json()), fetch('data/overlays.json').then(r=>r.json())]).then(([D, OV])=>{
+
+const fmt = (n,d=1) => n.toLocaleString('pt-BR',{maximumFractionDigits:d});
+const ha = p => p._ha!=null ? fmt(p._ha, p._ha<10?2:1)+' ha' : null;
+
+/* ---------- Fotos por propriedade ---------- */
+const FARM_PHOTOS = {
+  'Fazenda Maripá':[{src:'images/foto1.jpg',cap:'APP no Haras Maripá — 2019, 2022 e 2026 (Google Earth)'},{src:'images/maripa_fogo.jpg',cap:'Restauração x área atingida pelo incêndio de agosto/2025'}],
+  'Fazenda São João I':[{src:'images/foto2.jpg',cap:'APP na Fazenda São João do Atibaia — 2015, 2022 e 2026'}],
+  'Fazenda Macatuba':[{src:'images/foto3.jpg',cap:'Restauração — imagens de 2022 e 2026'}],
+  'Fazenda Nossa Senhora de Lourdes':[{src:'images/foto3.jpg',cap:'Restauração — imagens de 2022 e 2026'},{src:'images/foto4.jpg',cap:'Restauração — imagens de 2022 e 2026'}],
+  'Fazenda Bela Vista':[{src:'images/foto4.jpg',cap:'Restauração — imagens de 2022 e 2026'}],
+  'Sítio Vargem das Pedras':[{src:'images/vargem1.jpg',cap:'Plantio de ~1.550 mudas na APP do Rio Camanducaia, nov/2025'},{src:'images/vargem2.jpg',cap:'Muda nativa recém-plantada, nov/2025'}]
+};
+const imgs = list => { list = list||[]; if(!list.length) return '';
+  if(list.length===1){ const p=list[0]; return `<img class="pimg" src="${p.src}" alt="${p.cap}" data-cap="${p.cap}" loading="lazy"><div class="pcap">${p.cap}</div>`; }
+  return `<div class="pgal">${list.map(p=>`<img class="pimg" src="${p.src}" alt="${p.cap}" data-cap="${p.cap}" title="${p.cap}" loading="lazy">`).join('')}</div><div class="pcap">${list.length} fotos · clique para ampliar</div>`; };
+const rows = arr => arr.filter(r=>r[1]!=null && r[1]!=='').map(r=>`<div class="pr"><b>${r[0]}</b><span class="v">${r[1]}</span></div>`).join('');
+
+/* ---------- Validação dos alertas ---------- */
+const VAL = {
+  confirmada_nativa:{c:'#b3261e', t:'Nativa suprimida'},
+  exotica:{c:'#d98b1f', t:'Árvores exóticas'},
+  licenciada:{c:'#3f6f9e', t:'Loteamento licenciado'},
+  nao_confirmada:{c:'#8a9096', t:'Não confirmado'}
+};
+const VAL_IMG = {
+  'Resíduo PRODES 2022':[{src:'images/alerta_nao_confirmado.jpg',cap:'Série 2021–2023: nenhuma alteração compatível com supressão'}],
+  'Resíduo PRODES 2023|licenciada':[{src:'images/alerta_licenciado.jpg',cap:'2022 → 2023: implantação de loteamento licenciado'}]
+};
+
+/* ---------- Definição das camadas ----------
+   kind: poly | line | point | circle | image | icon
+   tab : aba que liga a camada;  on: ligada ao entrar na aba */
+const APP_TIPO = h => ({"curso d'água (0 - 10m)":'rio ou córrego (até 10 m de largura)',"curso d'água (10 - 50m)":'rio de 10 a 50 m de largura',"curso d'água (50 - 200m)":'rio de 50 a 200 m de largura','nascente':'nascente',"massa d'água":'lago ou represa'})[h] || h;
+const PRODES_C = y => y<=2009 ? '#c7a6dc' : (y<=2014 ? '#8a57b3' : '#4a1f73');
+const L_DEFS = [
+  {id:'limite', name:'Limite municipal', kind:'poly', data:D.LIMITE, color:'#c1421f', fill:0, weight:3, always:true, leg:['l','#c1421f']},
+
+  {id:'subbacias', tab:'visao', on:true, name:'Sub-bacias hidrográficas', desc:'Jaguari, Camanducaia e Atibaia', kind:'poly', data:D.SUBBACIAS,
+    style:f=>({color:{Jaguari:'#1d4ed8',Camanducaia:'#0ea5e9',Atibaia:'#7c3aed'}[f.properties.nome], weight:1.5, fillOpacity:.14}),
+    legItems:[['f','#1d4ed8','Bacia do Jaguari'],['f','#0ea5e9','Bacia do Camanducaia'],['f','#7c3aed','Bacia do Atibaia']],
+    popup:p=>`<div class="pt">Bacia do Rio ${p.nome}</div>`+rows([['Área no município', p.ha?fmt(p.ha,0)+' ha':null],['APP florestada · rio principal (50 m)', fmt(p.app_principal,2)+'%'],['APP florestada · afluentes e nascentes', fmt(p.app_afluentes,2)+'%']])},
+  {id:'rios', tab:'visao', on:true, name:'Rios e córregos', kind:'line', data:D.RIOS, color:'#2563eb', weight:1.2, leg:['l','#2563eb'],
+    popup:p=>`<div class="pt">Rio ou córrego</div>`+rows([['Bacia',p.bacia]])},
+  {id:'nascentes', tab:'visao', on:false, name:'Nascentes', desc:'', kind:'point', data:D.NASCENTES, color:'#0891b2', radius:4, leg:['p','#0891b2'],
+    popup:()=>`<div class="pt">Nascente</div><div class="ptxt">Ponto de início de curso d'água. A APP é o raio de 50 m ao redor.</div>`},
+  {id:'zonas', tab:'visao', on:false, name:'Uso e ocupação do solo', desc:'Urbana, expansão e rural', kind:'group',
+    parts:[{data:D.ZONA_RURAL,color:'#7fae5a',z:'Área rural',ha:'2.879,7 ha'},{data:D.ZONA_EXPANSAO,color:'#dcb04a',z:'Área de expansão urbana',ha:'5.725,1 ha'},{data:D.ZONA_URBANA,color:'#d77f98',z:'Área urbana',ha:'5.540,9 ha'}],
+    legItems:[['f','#d77f98','Área urbana'],['f','#dcb04a','Expansão urbana'],['f','#7fae5a','Área rural']]},
+
+  {id:'remanescentes', tab:'vegetacao', on:true, tabs:['prioridades'], name:'Vegetação nativa', desc:'Mata Atlântica e Cerrado', kind:'poly', data:D.REMANESCENTES, color:'#1f7a44', fill:.6, weight:.7, leg:['f','#1f7a44'],
+    popup:p=>`<div class="pt">Vegetação nativa</div>`+rows([['Fitofisionomia',p.FITOFISION],['Área',p.AREA_HA?fmt(p.AREA_HA,2)+' ha':null]])},
+  {id:'app', tab:'vegetacao', on:true, tabs:['prioridades'], name:'Áreas de Preservação Permanente', desc:'Margens de rios e nascentes', kind:'poly', data:D.APP, color:'#d4a017', fill:.4, weight:.6, leg:['f','#d4a017'],
+    popup:p=>`<div class="pt">Área de Preservação Permanente</div>`+rows([['Protege',APP_TIPO(p.Hidrografia)],['Largura da faixa',p.APP_m?p.APP_m+' m':null],['Área',p['Área_ha']?fmt(p['Área_ha'],2)+' ha':null]])},
+  {id:'rppn', tab:'vegetacao', on:true, name:'RPPN Estância Jatobá', desc:'', kind:'poly', data:D.RPPN, color:'#6b3fa0', fill:.3, weight:2.2, dash:'5 4', leg:['f','#6b3fa0'],
+    popup:()=>`<div class="pt">RPPN Estância Jatobá</div>`+rows([['Área da reserva','26,67 ha'],['Ato','Portaria IBAMA 105/2000']])+`<div class="ptxt">Unidade de conservação particular e perpétua. O limite é esquemático, como na base oficial.</div>`},
+
+  {id:'prodes', tab:'degradacao', on:true, name:'Supressão 2004–2018', desc:'Satélite (INPE)', kind:'poly', data:D.PRODES,
+    style:f=>({color:PRODES_C(f.properties.ano), fillColor:PRODES_C(f.properties.ano), weight:1, fillOpacity:.75}),
+    legItems:[['f','#c7a6dc','2004–2009'],['f','#8a57b3','2010–2014'],['f','#4a1f73','2016–2018']],
+    popup:p=>`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',p.ano],['Área',ha(p)]])},
+  {id:'validacao', tab:'degradacao', on:true, name:'Desmatamento recente (2019–2024)', desc:'Alertas conferidos · local aproximado', kind:'circle', data:D.VALIDACAO,
+    legItems:Object.values(VAL).map(v=>['c',v.c,v.t]),
+    popup:p=>{ const v=VAL[p.status]; const im = VAL_IMG[p.alerta+'|'+p.status] || (p.status==='nao_confirmada' && VAL_IMG[p.alerta]) || null;
+      return `<div class="pt">Desmatamento recente — verificação</div><span class="pbadge" style="--c:${v.c}"><i></i>${v.t}</span><div class="ptxt">${p.texto}</div>${imgs(im)}`+rows([['Alerta do satélite', /^Resíduo /.test(p.alerta) ? p.alerta.replace('Resíduo ','')+' (reanálise do INPE)' : p.alerta]])+`<div class="src">Localização aproximada (círculo de 350 m, deslocado)</div>`;}},
+  {id:'fogo2025', tab:'degradacao', on:true, name:'Áreas queimadas em 2025', desc:'Cor por mês do fogo', kind:'image', src:'images/fogo2025.png', bounds:OV.fogo2025, opacity:.95, pixel:true,
+    legItems:[['f','#a81c24','Agosto e setembro'],['f','#e27020','Junho e julho'],['f','#d6b046','Outros meses']]},
+  {id:'incendio', tab:'degradacao', on:true, name:'Incêndio de agosto/2025', desc:'≈203 ha', kind:'poly', data:D.INCENDIO_2025, color:'#1f1a17', fill:.06, weight:2.4, dash:'6 4', leg:['l','#1f1a17'],
+    popup:p=>`<div class="pt">Incêndio de agosto de 2025</div><div class="ptxt">Maior evento da série 2022–2025. Atingiu vegetação nativa, APPs e ~21 ha de áreas restauradas no Haras Maripá.</div>${imgs([{src:'images/maripa_fogo.jpg',cap:'Restauração do Haras Maripá (verde/amarelo) x área queimada (laranja)'}])}`+rows([['Área deste polígono',ha(p)]])},
+
+  {id:'vulnerabilidade', tab:'prioridades', on:true, name:'Vulnerabilidade à erosão hídrica', desc:'Da muito baixa à muito alta', kind:'image', src:'images/vulnerabilidade.png', bounds:OV.vulnerabilidade, opacity:.85,
+    legItems:[['f','#c02424','Muito alta'],['f','#e67c28','Alta'],['f','#f0d03c','Média'],['f','#66aa5a','Baixa'],['f','#2b6cb0','Muito baixa'],['f','#969696','Área urbanizada']]},
+  {id:'nasc_protecao', tab:'prioridades', on:true, name:'Entorno das nascentes (50 m)', desc:'Raio a manter com vegetação', kind:'nasc', data:D.NASCENTES, color:'#0891b2',
+    legItems:[['c','#0891b2','Raio de 50 m da nascente']],
+    popup:()=>`<div class="pt">Entorno de nascente</div><div class="ptxt">Raio de 50 m de Área de Preservação Permanente. Deve permanecer com vegetação nativa; se estiver degradado, a recomposição é prioritária.</div>`},
+  {id:'subbacias_contorno', tab:'prioridades', on:true, name:'Contorno das sub-bacias', kind:'poly', data:D.SUBBACIAS, color:'#16232e', fill:0, weight:1.6, dash:'4 3', leg:['l','#16232e'],
+    popup:p=>`<div class="pt">Bacia do Rio ${p.nome}</div>`},
+
+  {id:'fases', tab:'acoes', on:true, name:'Fases do Programa Bacias', desc:'Contorno aproximado de cada fase', kind:'fase', data:D.FASES,
+    legItems:[['l','#1f7a44','1ª fase (2014–2021)'],['l','#0f8a7e','2ª fase (desde 2022)']]},
+  {id:'restauracao', tab:'acoes', on:true, name:'Áreas restauradas', desc:'Plantios do Programa Bacias', kind:'poly', data:D.REFLORESTAMENTO,
+    style:f=>({color:f.properties.fase===1?'#1f7a44':'#0f8a7e', weight:1.2, fillOpacity:.65}),
+    legItems:[['f','#1f7a44','Restauração — 1ª fase'],['f','#0f8a7e','Restauração — 2ª fase']]},
+  {id:'biodigestores', tab:'acoes', on:true, name:'Biodigestores', desc:'Saneamento rural', kind:'point', data:D.BIODIGESTORES, color:'#c98a1f', radius:6, leg:['p','#c98a1f'],
+    popup:()=>`<div class="pt">Biodigestor rural</div><div class="ptxt">Trata o esgoto doméstico da propriedade e reduz a carga poluente nos cursos d'água.</div>`},
+  {id:'equipamentos', tab:'acoes', on:true, name:'Viveiro e Matrizeiro', desc:'', kind:'icon', data:D.EQUIPAMENTOS,
+    legItems:[['p','#2f7d4a','Viveiro Municipal'],['p','#7a5a2e','Matrizeiro de Sementes']]},
+  {id:'conectividade', tab:'acoes', on:false, name:'Área de Conectividade', desc:'Reconecta RMC', kind:'poly', data:D.CONECTIVIDADE, color:'#22a35a', fill:.12, weight:1.5, leg:['f','#22a35a'],
+    popup:()=>`<div class="pt">Área de Conectividade — Reconecta RMC</div><div class="ptxt">Zona estratégica para ações conjuntas entre os municípios da RMC, ligando fragmentos florestais e unidades de conservação.</div>`},
+  {id:'corredores', tab:'acoes', on:false, name:'Corredores ecológicos', desc:'Reconecta RMC', kind:'poly', data:D.CORREDORES, color:'#0f5132', fill:.3, weight:1, leg:['f','#0f5132'],
+    popup:()=>`<div class="pt">Corredor ecológico — Reconecta RMC</div>`}
+];
+const FONTES = {
+  limite:'IBGE — Malha territorial (distrito de Jaguariúna)',
+  subbacias:'Prefeitura de Jaguariúna (DAMA) — Plano, Figura 6; APP florestada: Plano, Tabela 2',
+  rios:'Prefeitura de Jaguariúna (DAMA) — hidrografia municipal',
+  nascentes:'ANA — Base Hidrográfica Ottocodificada (BHO, 2015)',
+  zonas:'Prefeitura de Jaguariúna (DAMA) — loteamentos autorizados até mai/2026',
+  remanescentes:'Inventário Florestal da Vegetação Nativa de SP, 2020 (IPA/SEMIL, DataGeo)',
+  app:'Prefeitura de Jaguariúna (DAMA) — faixas do Código Florestal (Lei 12.651/2012)',
+  rppn:'ICMBio — Sistema de Monitoria de RPPN (SIMRPPN); Portaria IBAMA 105/2000',
+  prodes:'INPE — PRODES Mata Atlântica, plataforma TerraBrasilis (2026)',
+  validacao:'Alertas: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens Google Earth e vistoria de jun/2026',
+  fogo2025:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
+  incendio:'Prefeitura de Jaguariúna (DAMA) — delimitação por imagens de satélite e registros de ocorrência',
+  vulnerabilidade:'Plano Municipal de Conservação do Solo e da Água no Meio Rural (Jaguariúna, 2024), Mapa 5',
+  nasc_protecao:'ANA — Base Hidrográfica Ottocodificada (BHO); faixa de 50 m conforme Lei 12.651/2012',
+  subbacias_contorno:'Prefeitura de Jaguariúna (DAMA) — Plano, Figura 6',
+  fases:'Prefeitura (DAMA) — contorno gerado a partir das áreas restauradas do Programa Bacias',
+  restauracao:'Programa Bacias Jaguariúna — Prefeitura (DAMA)',
+  biodigestores:'Programa Bacias Jaguariúna — Prefeitura (DAMA), 2025',
+  equipamentos:'Prefeitura de Jaguariúna (DAMA); fotos do Plano (2012 e 2026)',
+  conectividade:'Projeto Reconecta RMC — Termo de Cooperação Técnica dos municípios da RMC',
+  corredores:'Projeto Reconecta RMC — Termo de Cooperação Técnica dos municípios da RMC'
+};
+L_DEFS.forEach(d=>{ d.fonte = FONTES[d.id]; if(!d.legItems && d.leg) d.legItems=[[d.leg[0], d.leg[1], d.name]]; });
+const withFonte = (html, def) => html + (def.fonte ? `<div class="src" style="margin-top:6px">Fonte: ${def.fonte}</div>` : '');
+
+/* ---------- Popup do reflorestamento ---------- */
+const reflorPopup = p => `<div class="pt">${p.local}</div><span class="pbadge" style="--c:${p.fase===1?'#1f7a44':'#0f8a7e'}"><i></i>${p.fase===1?'1ª fase · 2014–2021':'2ª fase · desde 2022'}</span>${imgs(FARM_PHOTOS[p.local])}`;
+L_DEFS.find(d=>d.id==='restauracao').popup = reflorPopup;
+
+function areaHa(fc){
+  let t=0; (fc.features||[]).forEach(f=>{ const g=f.geometry; const polys=g.type==='MultiPolygon'?g.coordinates:[g.coordinates];
+    polys.forEach(poly=>{ const lat0=poly[0].reduce((s,p)=>s+p[1],0)/poly[0].length; const mx=111320*Math.cos(lat0*Math.PI/180), my=110540;
+      poly.forEach((r,i)=>{ let a=0; for(let k=0;k<r.length-1;k++) a+=r[k][0]*mx*r[k+1][1]*my - r[k+1][0]*mx*r[k][1]*my; t+=(i?-1:1)*Math.abs(a)/2; }); }); });
+  return t/1e4;
+}
+const ha1 = areaHa({features:D.REFLORESTAMENTO.features.filter(f=>f.properties.fase===1)}), ha2 = areaHa({features:D.REFLORESTAMENTO.features.filter(f=>f.properties.fase===2)});
+
+/* ---------- Mapa ---------- */
+const map = L.map('map',{zoomControl:false, minZoom:9, maxZoom:19, zoomSnap:.25});
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.control.scale({position:'bottomleft', imperial:false}).addTo(map);
+const basemaps = {
+  street:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:19}),
+  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri, Maxar',maxZoom:19}),
+  terrain:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap, SRTM | OpenTopoMap',maxZoom:17})
+};
+basemaps.street.addTo(map);
+document.querySelectorAll('.basemap-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.basemap-btn').forEach(x=>{x.classList.remove('active');map.removeLayer(basemaps[x.dataset.base]);});
+  b.classList.add('active'); basemaps[b.dataset.base].addTo(map); basemaps[b.dataset.base].bringToBack();
+  document.body.classList.toggle('satellite-active', b.dataset.base==='satellite');
+}));
+
+map.createPane('overlays'); map.getPane('overlays').style.zIndex = 390;
+
+const layers = {};
+const FASE_LAYERS = {};
+function fasePopup(fz){
+  const haF = fz===1 ? ha1 : ha2;
+  return fz===1
+    ? `<div class="pt">Programa Bacias — 1ª fase (2014–2021)</div><span class="pbadge" style="--c:#1f7a44"><i></i>Área Piloto · Bacia do Jaguari</span><div class="ptxt">Restauração de APPs e florestas, cercamento e PSA a produtores rurais na região mais vulnerável à erosão, a montante da captação de água.</div>`+rows([['Área restaurada', fmt(haF,0)+' ha'],['PSA pago aos produtores','≈ R$ 100 mil'],['Destaque','Haras Maripá, referência estadual (CETESB, 2026)']])
+    : `<div class="pt">Programa Bacias — 2ª fase (desde 2022)</div><span class="pbadge" style="--c:#0f8a7e"><i></i>Área de Interesse · Bacia do Camanducaia</span><div class="ptxt">Restauração de APPs e florestas, recuperação de nascentes e saneamento rural com biodigestores.</div>`+rows([['Área restaurada', fmt(haF,0)+' ha'],['Biodigestores instalados', D.BIODIGESTORES.features.length]]);
+}
+function bindPop(def){
+  return (f, lyr) => {
+    if(def.popup) lyr.bindPopup(withFonte(def.popup(f.properties||{}), def), {maxWidth:300});
+    if(def.kind==='poly' && def.popup){
+      lyr.on('mouseover',()=>lyr.setStyle({weight:(lyr.options.weight||1)+1.4}));
+      lyr.on('mouseout',()=>lyr.setStyle({weight:lyr.options._w}));
+    }
+  };
+}
+L_DEFS.forEach(def=>{
+  let lyr;
+  if(def.kind==='poly'){
+    lyr = L.geoJSON(def.data,{
+      style:f=>{ const s = def.style ? def.style(f) : {color:def.color, weight:def.weight, fillOpacity:def.fill, dashArray:def.dash};
+        s.fillColor = s.fillColor || s.color; s._w = s.weight; if(def.dash) s.dashArray = def.dash; return s; },
+      interactive: !!def.popup, onEachFeature:bindPop(def)});
+  }else if(def.kind==='line'){
+    lyr = L.geoJSON(def.data,{style:()=>({color:def.color, weight:def.weight, opacity:.9}), onEachFeature:bindPop(def)});
+  }else if(def.kind==='point'){
+    lyr = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:def.radius, color:'#fff', weight:1.3, fillColor:def.color, fillOpacity:.95}), onEachFeature:bindPop(def)});
+  }else if(def.kind==='circle'){
+    lyr = L.geoJSON(def.data,{pointToLayer:(f,ll)=>{ const c=VAL[f.properties.status].c;
+      return L.circle(ll,{radius:350, color:c, weight:2.2, fillColor:c, fillOpacity:.18}); }, onEachFeature:bindPop(def)});
+  }else if(def.kind==='image'){
+    lyr = L.imageOverlay(def.src, def.bounds, {opacity:def.opacity, pane:'overlays', className:def.pixel?'pix':''});
+  }else if(def.kind==='group'){
+    lyr = L.layerGroup(def.parts.map(pt=>L.geoJSON(pt.data,{style:()=>({color:pt.color, weight:.8, fillColor:pt.color, fillOpacity:.45}),
+      onEachFeature:(f,l)=>l.bindPopup(`<div class="pt">${pt.z}</div>`+rows([['Área total no município',pt.ha]])+`<div class="src" style="margin-top:6px">Fonte: ${def.fonte}</div>`)})));
+  }else if(def.kind==='nasc'){
+    lyr = L.layerGroup();
+    def.data.features.forEach(f=>{
+      const ll = [f.geometry.coordinates[1], f.geometry.coordinates[0]];
+      const html = withFonte(def.popup(), def);
+      lyr.addLayer(L.circle(ll,{radius:50, color:def.color, weight:2, fillColor:def.color, fillOpacity:.35}).bindPopup(html,{maxWidth:300}));
+      lyr.addLayer(L.circleMarker(ll,{radius:3.5, color:'#fff', weight:1, fillColor:def.color, fillOpacity:1}).bindPopup(html,{maxWidth:300}));
+    });
+  }else if(def.kind==='fase'){
+    const FC = {1:'#1f7a44', 2:'#0f8a7e'};
+    lyr = L.layerGroup();
+    def.data.features.forEach(f=>{
+      const fz = f.properties.fase, c = FC[fz];
+      const html = withFonte(fasePopup(fz), def);
+      const poly = L.geoJSON(f,{style:{color:c, weight:2.5, dashArray:'7 5', fillColor:c, fillOpacity:.07}}).bindPopup(html,{maxWidth:300});
+      const lab = L.marker([f.properties.lat, f.properties.lon],{icon:L.divIcon({className:'fase-label', html:`<div style="--c:${c}">${fz}ª fase</div>`, iconSize:[0,0]}), zIndexOffset:500})
+        .bindPopup(html,{maxWidth:300});
+      lyr.addLayer(poly); lyr.addLayer(lab);
+      FASE_LAYERS[fz] = {poly, lab};
+    });
+  }else if(def.kind==='icon'){
+    const EQ = {
+      viveiro:{c:'#2f7d4a', e:'🌱', html:`<div class="pt">Viveiro Municipal de Mudas</div><div class="ptxt">5.000 m² junto ao CEMA, no bairro Guedes. Capacidade de ~60 mil mudas por ano, para arborização urbana e plantios em APP.</div>${imgs([{src:'images/viveiro1.jpg',cap:'Mudas de pequeno porte'},{src:'images/viveiro2.jpg',cap:'Mudas de maior porte'},{src:'images/viveiro3.jpg',cap:'Plantio em parque municipal'}])}<div class="ptxt"><b>Doação de mudas:</b> de segunda a sexta, das 7h às 16h, no próprio viveiro.</div>`},
+      matrizeiro:{c:'#7a5a2e', e:'🌳', html:`<div class="pt">Matrizeiro de Sementes</div><div class="ptxt">600 árvores de 100 espécies nativas da Mata Atlântica, plantadas em 2012 na Fazenda da Barra em parceria com o Consórcio PCJ. Fornecem sementes de espécies ameaçadas aos viveiros da região.</div>${imgs([{src:'images/matrizeiro2012b.jpg',cap:'Plantio na inauguração, abril de 2012'},{src:'images/matrizeiro2026.jpg',cap:'O matrizeiro em julho de 2026'}])}`}
+    };
+    lyr = L.geoJSON(def.data,{pointToLayer:(f,ll)=>{ const q=EQ[f.properties.tipo];
+      return L.marker(ll,{icon:L.divIcon({className:'ico-marker',html:`<div class="dot" style="--c:${q.c}">${q.e}</div>`,iconSize:[30,30],iconAnchor:[15,15]}), title:f.properties.nome})
+        .bindPopup(withFonte(q.html, def),{maxWidth:300}).bindTooltip(f.properties.nome,{direction:'top',offset:[0,-14]}); }});
+  }
+  layers[def.id] = lyr;
+});
+layers.limite.addTo(map);
+window.__pma = {map, layers};
+const muniBounds = layers.limite.getBounds();
+map.fitBounds(muniBounds,{padding:[20,20]});
+
+/* ---------- Painel: linhas de camada ---------- */
+function setLayer(id, on){
+  const def = L_DEFS.find(d=>d.id===id), lyr = layers[id];
+  if(on && !map.hasLayer(lyr)) lyr.addTo(map);
+  if(!on && map.hasLayer(lyr)) map.removeLayer(lyr);
+  document.querySelectorAll(`input[data-id="${id}"]`).forEach(c=>c.checked = on);
+  layers.limite.bringToFront();
+  renderLegend();
+}
+document.querySelectorAll('.layers').forEach(box=>{
+  box.dataset.layers.split(',').forEach(id=>{
+    const def = L_DEFS.find(d=>d.id===id);
+    const color = def.color || (def.legItems && def.legItems[0][1]) || '#1f7a44';
+    const row = document.createElement('label');
+    row.className = 'layer-row'; row.style.setProperty('--c', color);
+    row.innerHTML = `<input type="checkbox" data-id="${id}"><div><div class="nm">${def.name}</div>${def.desc?`<div class="ds">${def.desc}</div>`:''}</div>`;
+    row.querySelector('input').addEventListener('change', e=>setLayer(id, e.target.checked));
+    box.appendChild(row);
+  });
+});
+
+/* ---------- Fontes de cada aba (um bloco no fim do painel) ---------- */
+document.querySelectorAll('.pane').forEach(pane=>{
+  const ids = [...pane.querySelectorAll('.layers')].flatMap(b=>b.dataset.layers.split(','));
+  const items = ids.map(id=>L_DEFS.find(d=>d.id===id)).filter(d=>d && d.fonte).map(d=>`<li><b>${d.name}:</b> ${d.fonte}</li>`);
+  (pane.dataset.fontes||'').split('|').filter(Boolean).forEach(t=>{ const [k,...v]=t.split(': '); items.push(`<li><b>${k}:</b> ${v.join(': ')}</li>`); });
+  pane.insertAdjacentHTML('beforeend', `<details class="fontes"><summary>Fontes dos dados desta aba</summary><ul>${items.join('')}</ul></details>`);
+});
+
+/* ---------- Legenda dinâmica (só o que está ligado) ---------- */
+function renderLegend(){
+  const body = document.getElementById('legendBody');
+  body.innerHTML = L_DEFS.filter(d=>map.hasLayer(layers[d.id])).map(d=>{
+    const items = d.legItems.map(([k,c,t])=>{
+      const inner = k==='l' ? `<i style="border-color:${c}"></i>` : k==='c' ? `<i style="border-color:${c};background:${c}2e"></i>` : `<i style="background:${c}"></i>`;
+      return `<div class="li"><span class="sw ${k}">${inner}</span><span>${t}</span></div>`; }).join('');
+    return d.legItems.length>1 ? `<div class="lg">${d.name}</div>${items}` : `<div class="solo">${items}</div>`;
+  }).join('');
+}
+document.getElementById('legendToggle').addEventListener('click',()=>{
+  const lg=document.getElementById('legend'); lg.classList.toggle('min');
+  document.getElementById('legendSign').textContent = lg.classList.contains('min')?'+':'–';
+});
+if(window.innerWidth<=760){ document.getElementById('legend').classList.add('min'); document.getElementById('legendSign').textContent='+'; }
+
+/* ---------- Abas ---------- */
+function openTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active', p.id==='pane-'+tab));
+  L_DEFS.forEach(d=>{ if(d.always) return; setLayer(d.id, d.tab===tab && !!d.on); });
+  document.getElementById('tabBody').scrollTop = 0;
+  map.closePopup();
+  map.flyToBounds(muniBounds,{padding:[20,20], duration:.6});
+  try{ sessionStorage.setItem('pma_tab', tab); }catch(e){}
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>openTab(t.dataset.tab)));
+let startTab = 'visao'; try{ startTab = sessionStorage.getItem('pma_tab') || 'visao'; }catch(e){}
+openTab(startTab);
+
+/* ---------- Números calculados a partir das camadas ---------- */
+document.getElementById('kHa').textContent = fmt(ha1+ha2,0);
+document.getElementById('kBio').textContent = D.BIODIGESTORES.features.length;
+document.getElementById('kNasc').textContent = D.NASCENTES.features.length;
+document.getElementById('kNasc2').textContent = D.NASCENTES.features.length;
+document.getElementById('ph1ha').textContent = fmt(ha1,0)+' ha';
+document.getElementById('ph2ha').textContent = fmt(ha2,0)+' ha';
+document.getElementById('ph2bio').textContent = D.BIODIGESTORES.features.length;
+document.querySelectorAll('.mini-row').forEach(b=>b.addEventListener('click',()=>{
+  const go = b.dataset.go;
+  if(window.innerWidth<=760) document.getElementById('sidebar').classList.remove('open');
+  map.closePopup();
+  if(go==='conectividade'){ setLayer('conectividade', true); setLayer('corredores', true); map.flyToBounds(layers.conectividade.getBounds(),{padding:[20,20], duration:.8}); return; }
+  setLayer('equipamentos', true);
+  layers.equipamentos.eachLayer(m=>{ if(m.feature.properties.tipo===go){ map.flyTo(m.getLatLng(), 15, {duration:.8}); map.once('moveend',()=>m.openPopup()); } });
+}));
+document.querySelectorAll('.ph-go').forEach(b=>b.addEventListener('click',()=>{
+  const fz = +b.dataset.fase, fl = FASE_LAYERS[fz];
+  setLayer('fases', true);
+  if(window.innerWidth<=760) document.getElementById('sidebar').classList.remove('open');
+  map.closePopup();
+  map.flyToBounds(fl.poly.getBounds(),{padding:[40,40], duration:.8});
+  map.once('moveend',()=>fl.lab.openPopup());
+}));
+const vc = {}; D.VALIDACAO.features.forEach(f=>vc[f.properties.status]=(vc[f.properties.status]||0)+1);
+const vmax = Math.max(...Object.values(vc));
+document.getElementById('valBars').innerHTML = Object.entries(VAL).map(([k,v])=>
+  `<div class="br" style="--c:${v.c};grid-template-columns:132px 1fr 22px"><span>${v.t}</span><div class="track"><div class="fill" style="width:${(vc[k]||0)/vmax*100}%"></div></div><span class="v">${vc[k]||0}</span></div>`).join('');
+
+/* ---------- Gráfico: área queimada por mês (pequenos múltiplos) ---------- */
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const FOGO = {
+  2022:[0,0,0,0,4,0.9,4,0.2,22,4,0.1,0],
+  2023:[0,0,0,0,0,0,0,2,2,0,0,0],
+  2024:[0,0,0,0,0.9,65,0,127,1,6,11,0.5],
+  2025:[6,5,10,0,0,2,14,77,203,30,32,0.7]
+};
+(function drawFire(){
+  const W=320, rowH=46, gap=10, left=40, right=48, chartW=W-left-right, bw=chartW/12;
+  const vmax = 203, years = Object.keys(FOGO);
+  const H = years.length*(rowH+gap)+14;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Área queimada por mês, 2022 a 2025">`;
+  years.forEach((y,i)=>{
+    const y0 = i*(rowH+gap), base = y0+rowH;
+    const tot = FOGO[y].reduce((a,b)=>a+b,0);
+    s += `<text class="yr" x="0" y="${base-2}">${y}</text>`;
+    s += `<text class="tot" x="${W}" y="${base-2}" text-anchor="end">${fmt(tot,0)} ha</text>`;
+    s += `<line class="base" x1="${left}" x2="${left+chartW}" y1="${base}" y2="${base}"/>`;
+    FOGO[y].forEach((v,m)=>{
+      const h = v>0 ? Math.max(1.5, v/vmax*rowH) : 0, x = left+m*bw+1;
+      s += `<rect class="hit" x="${left+m*bw}" y="${y0}" width="${bw}" height="${rowH}" data-t="${MESES[m]}/${y}: ${v?fmt(v,1)+' ha':'sem registro'}" data-x="${x+(bw-2)/2}" data-y="${base-h}"/>`;
+      if(h) s += `<path class="bar" d="M${x},${base} v${-(h-Math.min(2,h))} q0,${-Math.min(2,h)} ${Math.min(2,h)},${-Math.min(2,h)} h${bw-2-2*Math.min(2,h)} q${Math.min(2,h)},0 ${Math.min(2,h)},${Math.min(2,h)} v${h-Math.min(2,h)} z"/>`;
+    });
+  });
+  const by = years.length*(rowH+gap)+2;
+  MESES.forEach((m,i)=>{ if(i%2===0) s += `<text class="mo" x="${left+i*bw+bw/2}" y="${by}" text-anchor="middle">${m}</text>`; });
+  s += `</svg>`;
+  const box = document.getElementById('fireChart'), tip = document.getElementById('fireTip');
+  box.insertAdjacentHTML('beforeend', s);
+  const svg = box.querySelector('svg');
+  svg.querySelectorAll('.hit').forEach(r=>{
+    r.addEventListener('mouseenter',()=>{ const k = svg.getBoundingClientRect().width/W;
+      tip.textContent = r.dataset.t; tip.style.left = (r.dataset.x*k)+'px'; tip.style.top = (r.dataset.y*k)+'px'; tip.style.display='block'; });
+    r.addEventListener('mouseleave',()=>tip.style.display='none');
+  });
+  const tbl = `<table class="data"><tr><th>Mês</th>${years.map(y=>`<th>${y}</th>`).join('')}</tr>`+
+    MESES.map((m,i)=>`<tr><td>${m}</td>${years.map(y=>`<td>${FOGO[y][i]?fmt(FOGO[y][i],1):'–'}</td>`).join('')}</tr>`).join('')+
+    `<tr><td><b>Total</b></td>${years.map(y=>`<td><b>${fmt(FOGO[y].reduce((a,b)=>a+b,0),0)}</b></td>`).join('')}</tr></table>`;
+  document.getElementById('fireTbl').innerHTML = tbl;
+  document.getElementById('fireTblBtn').addEventListener('click',e=>{ const t=document.getElementById('fireTbl'); t.hidden=!t.hidden; e.target.textContent=t.hidden?'Ver tabela':'Ocultar tabela'; });
+})();
+
+/* ---------- Ampliar imagem dos popups ---------- */
+const lb = document.getElementById('lightbox');
+map.on('popupopen', e=>{
+  e.popup.getElement().querySelectorAll('.pimg').forEach(im=>im.addEventListener('click',()=>{
+    document.getElementById('lbImg').src = im.src; document.getElementById('lbCap').textContent = im.dataset.cap||'';
+    lb.classList.add('open'); document.getElementById('lbClose').focus(); }));
+});
+const closeLb = ()=>lb.classList.remove('open');
+document.getElementById('lbClose').addEventListener('click', closeLb);
+lb.addEventListener('click', e=>{ if(e.target===lb) closeLb(); });
+
+/* ---------- Janela "Sobre" ---------- */
+{ document.getElementById('aboutFontes').innerHTML = '<ul style="margin:4px 0 0;padding-left:16px">'+
+  L_DEFS.filter(d=>d.fonte && d.id!=='subbacias_contorno').map(d=>`<li><b>${d.name}:</b> ${d.fonte}</li>`).join('')+
+  '<li><b>Dados socioambientais e textos:</b> Plano Municipal de Mata Atlântica e Cerrado (DAMA, 2026); CAR: SiCAR-SP (08/06/2026); Mata Atlântica em SP: Atlas SOS Mata Atlântica/INPE 2024–2025</li>'+
+  '<li><b>Mapas base:</b> OpenStreetMap; Esri World Imagery; OpenTopoMap</li></ul>'; }
+const about = document.getElementById('aboutOverlay');
+const closeAbout = ()=>about.classList.remove('open');
+document.getElementById('aboutBtn').addEventListener('click',()=>about.classList.add('open'));
+document.getElementById('aboutClose').addEventListener('click', closeAbout);
+document.getElementById('aboutGo').addEventListener('click', closeAbout);
+about.addEventListener('click', e=>{ if(e.target===about) closeAbout(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeAbout(); closeLb(); } });
+try{ if(!sessionStorage.getItem('pma_about')){ about.classList.add('open'); sessionStorage.setItem('pma_about','1'); } }catch(e){ about.classList.add('open'); }
+
+/* ---------- Modo escuro ---------- */
+function applyTheme(dark){
+  document.body.classList.toggle('dark-mode', dark);
+  document.getElementById('iconMoon').style.display = dark?'none':'block';
+  document.getElementById('iconSun').style.display = dark?'block':'none';
+  try{ localStorage.setItem('geoportal-theme', dark?'dark':'light'); }catch(e){}
+}
+let saved=null; try{ saved = localStorage.getItem('geoportal-theme'); }catch(e){}
+applyTheme(saved ? saved==='dark' : false);
+document.getElementById('themeToggle').addEventListener('click',()=>applyTheme(!document.body.classList.contains('dark-mode')));
+
+/* ---------- Celular: painel deslizante ---------- */
+const sidebar = document.getElementById('sidebar');
+document.getElementById('toggleSidebar').addEventListener('click',()=>sidebar.classList.toggle('open'));
+map.on('click',()=>{ if(window.innerWidth<=760) sidebar.classList.remove('open'); });
+
+/* ---------- Barra de coordenadas ---------- */
+map.on('mousemove', e=>{ document.getElementById('roLat').textContent=e.latlng.lat.toFixed(5)+'°'; document.getElementById('roLon').textContent=e.latlng.lng.toFixed(5)+'°'; });
+const zz=()=>document.getElementById('roZoom').textContent=map.getZoom(); map.on('zoomend',zz); zz();
+});
+</script>
+</body>
+</html>
