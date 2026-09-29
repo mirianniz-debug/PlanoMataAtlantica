@@ -218,6 +218,7 @@
   #legend .sw.f i{width:13px;height:11px;border-radius:3px;}
   #legend .sw.l i{width:14px;height:0;border-top:2.4px solid;}
   #legend .sw.p i{width:9px;height:9px;border-radius:50%;border:1.4px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);}
+  #legend .sw.m i{width:13px;height:11px;border-radius:2px;}
   #legend .sw.n i{width:13px;height:11px;border-radius:2px;}
   #legend .sw.c i{width:13px;height:13px;border-radius:50%;border:2px solid;}
   #legend.min .body{display:none;}
@@ -353,14 +354,15 @@
         </div>
         <h3>Camadas</h3>
         <div class="lsub">Supressão de vegetação nativa (PRODES/INPE)</div>
-        <div class="layers" data-layers="s0409,s1014,s1617,sconf,snc"></div>
+        <div class="layers" data-layers="s0409,s1014,s1617,sconf,snc,sna"></div>
         <div class="lsub">Queimadas em 2025 (MapBiomas Fogo)</div>
         <div class="layers" data-layers="f_agoset,f_junjul,f_outros,incendio"></div>
         <h3>Alertas recentes (2019–2024)</h3>
-        <p class="note">Os alertas de satélite do INPE foram conferidos pela Prefeitura em imagens históricas e em campo:</p>
+        <p class="note">A Prefeitura confere os alertas de satélite do INPE em imagens históricas e em campo:</p>
         <div class="vchips">
           <div class="vchip" style="--c:#b3261e"><b id="kConf">—</b><span>supressões confirmadas<br><small>mostradas só como área aproximada</small></span></div>
           <div class="vchip" style="--c:#0090b0"><b id="kNC">—</b><span>alertas não confirmados<br><small>polígono do alerta, sem supressão</small></span></div>
+          <div class="vchip" style="--c:#b0288a;grid-column:1 / -1"><b id="kNA">—</b><span>alertas ainda não avaliados<br><small>resíduos de 2023, a verificar na próxima revisão</small></span></div>
         </div>
         <h3>Área queimada por mês</h3>
         <div class="chart" id="fireChart"><div class="tip" id="fireTip"></div></div>
@@ -529,7 +531,7 @@ const JUST = {
   exotica:{t:'Árvores exóticas (não nativas)'},
   licenciada:{t:'Loteamento licenciado (autorizado)'}
 };
-const CONF_C = '#b3261e', NC_C = '#00a5c8', NC_EDGE = '#053b4c';
+const CONF_C = '#b3261e', NC_C = '#00a5c8', NC_EDGE = '#053b4c', NA_C = '#d63aa6', NA_EDGE = '#4a0d38';
 
 /* ---------- Definição das camadas ----------
    kind: poly | line | point | circle | image | icon
@@ -568,6 +570,8 @@ const L_DEFS = [
     color:CONF_C, legItems:[['c',CONF_C,'Supressão confirmada (2019–2024)']]},
   {id:'snc', tab:'degradacao', on:true, name:'Alerta não confirmado (2019–2024)', desc:'Satélite indicou, verificação não confirmou', kind:'snc', data:D.ALERTAS_NC,
     color:NC_C, legItems:[['n',NC_C,'Alerta não confirmado (2019–2024)']]},
+  {id:'sna', tab:'degradacao', on:true, name:'Alerta ainda não avaliado (2023)', desc:'Será verificado na próxima revisão do Plano', kind:'sna', data:D.ALERTAS_NA,
+    color:NA_C, legItems:[['m',NA_C,'Alerta ainda não avaliado (2023)']]},
   {id:'f_agoset', tab:'degradacao', on:true, name:'Agosto e setembro (meses de estiagem)', desc:'≈279 ha queimados', kind:'image', src:'images/fogo_agoset.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#a81c24', leg:['f','#a81c24']},
   {id:'f_junjul', tab:'degradacao', on:true, name:'Junho e julho (início da estiagem)', desc:'≈16 ha queimados', kind:'image', src:'images/fogo_junjul.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#e27020', leg:['f','#e27020']},
   {id:'f_outros', tab:'degradacao', on:true, name:'Outubro a março (período chuvoso)', desc:'≈82 ha queimados', kind:'image', src:'images/fogo_outros.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#d6b046', leg:['f','#d6b046']},
@@ -609,6 +613,7 @@ const FONTES = {
   s1014:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
   s1617:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
   sconf:'Alertas: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth e vistoria de jun/2026 (Plano, item 2.1)',
+  sna:'Alertas: INPE — PRODES/TerraBrasilis, reanálise (2026). Situação: Plano, item 2.1',
   snc:'Alertas: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth (Plano, item 2.1)',
   f_agoset:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
   f_junjul:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
@@ -700,6 +705,12 @@ L_DEFS.forEach(def=>{
     const marks = L.layerGroup(def.data.features.map(f=>{ const c=L.geoJSON(f).getBounds().getCenter();
       return L.circleMarker(c,{radius:6, color:'#fff', weight:2, fillColor:NC_C, fillOpacity:1}).bindPopup(pop(f),{maxWidth:300}); }));
     lyr = L.layerGroup([polys, marks]);
+  }else if(def.kind==='sna'){
+    const pop = f => withFonte(`<div class="pt">Alerta de supressão (${f.properties.ano})</div><span class="pbadge" style="--c:${NA_C}"><i></i>Ainda não avaliado</span><div class="ptxt">Área indicada pelo INPE na reanálise das imagens. A verificação em imagens históricas ainda não foi feita e está prevista para a próxima revisão do Plano.</div>`+rows([['Origem',f.properties.origem]]), def);
+    const polys = L.geoJSON(def.data,{style:()=>({color:NA_EDGE, weight:2.2, fillColor:NA_C, fillOpacity:.55}), onEachFeature:(f,l)=>l.bindPopup(pop(f),{maxWidth:300})});
+    const marks = L.layerGroup(def.data.features.map(f=>{ const c=L.geoJSON(f).getBounds().getCenter();
+      return L.circleMarker(c,{radius:6, color:'#fff', weight:2, fillColor:NA_C, fillOpacity:1}).bindPopup(pop(f),{maxWidth:300}); }));
+    lyr = L.layerGroup([polys, marks]);
   }else if(def.kind==='image'){
     lyr = L.imageOverlay(def.src, def.bounds, {opacity:def.opacity, pane:'overlays', className:def.pixel?'pix':''});
   }else if(def.kind==='group'){
@@ -775,7 +786,7 @@ function renderLegend(){
   const body = document.getElementById('legendBody');
   body.innerHTML = L_DEFS.filter(d=>map.hasLayer(layers[d.id])).map(d=>{
     const items = d.legItems.map(([k,c,t])=>{
-      const inner = k==='l' ? `<i style="border-color:${c}"></i>` : k==='c' ? `<i style="border-color:${c};background:${c}2e;border-style:dashed"></i>` : k==='n' ? `<i style="border:1.8px solid #053b4c;background:${c}"></i>` : `<i style="background:${c}"></i>`;
+      const inner = k==='l' ? `<i style="border-color:${c}"></i>` : k==='c' ? `<i style="border-color:${c};background:${c}2e;border-style:dashed"></i>` : k==='n' ? `<i style="border:1.8px solid #053b4c;background:${c}"></i>` : k==='m' ? `<i style="border:1.8px solid #4a0d38;background:${c}"></i>` : `<i style="background:${c}"></i>`;
       return `<div class="li"><span class="sw ${k}">${inner}</span><span>${t}</span></div>`; }).join('');
     return d.legItems.length>1 ? `<div class="lg">${d.name}</div>${items}` : `<div class="solo">${items}</div>`;
   }).join('');
@@ -829,6 +840,7 @@ document.getElementById('kConf').textContent = D.VALIDACAO.features.length;
   const cs = D.ALERTAS_NC.features.map(f=>{ const b=L.geoJSON(f).getBounds().getCenter(); return [b.lat,b.lng]; });
   const locs = []; cs.forEach(c=>{ if(!locs.some(l=>Math.abs(l[0]-c[0])<0.003 && Math.abs(l[1]-c[1])<0.003)) locs.push(c); });
   document.getElementById('kNC').textContent = locs.length; }
+document.getElementById('kNA').textContent = D.ALERTAS_NA.features.length;
 
 /* ---------- Gráfico: área queimada por mês (pequenos múltiplos) ---------- */
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
