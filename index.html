@@ -568,9 +568,9 @@ const L_DEFS = [
     color:CONF_C, legItems:[['c',CONF_C,'Supressão confirmada (2019–2024)']]},
   {id:'snc', tab:'degradacao', on:true, name:'Alerta não confirmado (2019–2024)', desc:'Satélite indicou, verificação não confirmou', kind:'snc', data:D.ALERTAS_NC,
     color:NC_C, legItems:[['n',NC_C,'Alerta não confirmado (2019–2024)']]},
-  {id:'f_agoset', tab:'degradacao', on:true, name:'Agosto e setembro', kind:'image', src:'images/fogo_agoset.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#a81c24', leg:['f','#a81c24']},
-  {id:'f_junjul', tab:'degradacao', on:true, name:'Junho e julho', kind:'image', src:'images/fogo_junjul.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#e27020', leg:['f','#e27020']},
-  {id:'f_outros', tab:'degradacao', on:true, name:'Outros meses', kind:'image', src:'images/fogo_outros.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#d6b046', leg:['f','#d6b046']},
+  {id:'f_agoset', tab:'degradacao', on:true, name:'Agosto e setembro (meses de estiagem)', desc:'≈279 ha queimados', kind:'image', src:'images/fogo_agoset.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#a81c24', leg:['f','#a81c24']},
+  {id:'f_junjul', tab:'degradacao', on:true, name:'Junho e julho (início da estiagem)', desc:'≈16 ha queimados', kind:'image', src:'images/fogo_junjul.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#e27020', leg:['f','#e27020']},
+  {id:'f_outros', tab:'degradacao', on:true, name:'Outubro a março (período chuvoso)', desc:'≈82 ha queimados', kind:'image', src:'images/fogo_outros.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#d6b046', leg:['f','#d6b046']},
   {id:'incendio', tab:'degradacao', on:true, name:'Incêndio de agosto/2025', desc:'≈203 ha', kind:'poly', data:D.INCENDIO_2025, color:'#1f1a17', fill:.06, weight:2.4, dash:'6 4', leg:['l','#1f1a17'],
     popup:p=>`<div class="pt">Incêndio de agosto de 2025</div><div class="ptxt">Maior evento da série 2022–2025. Atingiu vegetação nativa, APPs e ~21 ha de áreas restauradas no Haras Maripá.</div>${imgs([{src:'images/maripa_fogo.jpg',cap:'Restauração do Haras Maripá (verde/amarelo) x área queimada (laranja)'}])}`+rows([['Área deste polígono',ha(p)]])},
 
