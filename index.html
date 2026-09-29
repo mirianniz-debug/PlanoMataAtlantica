@@ -154,6 +154,7 @@
   .vchip b{font:600 20px/1 var(--font-mono);color:var(--c);}
   .vchip span{font:500 11.5px/1.3 var(--font-body);color:var(--ink);}
   .vchip small{font-weight:400;color:var(--muted);}
+  .lsub{font:600 11px var(--font-body);color:var(--muted);margin:10px 0 2px 2px;}
   .callout{border-left:3px solid var(--fire);background:var(--chip);border-radius:0 8px 8px 0;padding:9px 11px;font:400 12px/1.5 var(--font-body);color:var(--ink-soft);margin:10px 0;}
   .callout.green{border-left-color:var(--forest);}
   .callout b{color:var(--ink);}
@@ -351,12 +352,15 @@
           <div class="kpi fire"><div class="n" id="kFogo">380<small>ha</small></div><div class="l">queimados em 2025, o maior valor da série</div></div>
         </div>
         <h3>Camadas</h3>
-        <div class="layers" data-layers="supressao,fogo2025,incendio"></div>
+        <div class="lsub">Supressão de vegetação nativa (PRODES/INPE)</div>
+        <div class="layers" data-layers="s0409,s1014,s1617,sconf,snc"></div>
+        <div class="lsub">Queimadas em 2025 (MapBiomas Fogo)</div>
+        <div class="layers" data-layers="f_agoset,f_junjul,f_outros,incendio"></div>
         <h3>Alertas recentes (2019–2024)</h3>
         <p class="note">Os alertas de satélite do INPE foram conferidos pela Prefeitura em imagens históricas e em campo:</p>
         <div class="vchips">
           <div class="vchip" style="--c:#b3261e"><b id="kConf">—</b><span>supressões confirmadas<br><small>mostradas só como área aproximada</small></span></div>
-          <div class="vchip" style="--c:#6b7178"><b id="kNC">—</b><span>alertas não confirmados<br><small>polígono do alerta, sem supressão</small></span></div>
+          <div class="vchip" style="--c:#0090b0"><b id="kNC">—</b><span>alertas não confirmados<br><small>polígono do alerta, sem supressão</small></span></div>
         </div>
         <h3>Área queimada por mês</h3>
         <div class="chart" id="fireChart"><div class="tip" id="fireTip"></div></div>
@@ -525,7 +529,7 @@ const JUST = {
   exotica:{t:'Árvores exóticas (não nativas)'},
   licenciada:{t:'Loteamento licenciado (autorizado)'}
 };
-const CONF_C = '#b3261e', NC_C = '#6b7178';
+const CONF_C = '#b3261e', NC_C = '#00a5c8', NC_EDGE = '#053b4c';
 
 /* ---------- Definição das camadas ----------
    kind: poly | line | point | circle | image | icon
@@ -554,11 +558,19 @@ const L_DEFS = [
   {id:'rppn', tab:'vegetacao', on:true, name:'RPPN Estância Jatobá', desc:'', kind:'poly', data:D.RPPN, color:'#6b3fa0', fill:.3, weight:2.2, dash:'5 4', leg:['f','#6b3fa0'],
     popup:()=>`<div class="pt">RPPN Estância Jatobá</div>`+rows([['Área da reserva','26,67 ha'],['Ato','Portaria IBAMA 105/2000']])+`<div class="ptxt">Unidade de conservação particular e perpétua. O limite é esquemático, como na base oficial.</div>`},
 
-  {id:'supressao', tab:'degradacao', on:true, name:'Supressão de vegetação nativa (2004–2024)', desc:'Satélite (INPE) · alertas recentes conferidos', kind:'supr',
-    legItems:[['f','#c7a6dc','2004–2009'],['f','#8a57b3','2010–2014'],['f','#4a1f73','2016–2017'],
-              ['c',CONF_C,'Supressão confirmada (2019–2024) · área aproximada'],['n',NC_C,'Alerta não confirmado (2019–2024)']]},
-  {id:'fogo2025', tab:'degradacao', on:true, name:'Áreas queimadas em 2025', desc:'Cor por mês do fogo', kind:'image', src:'images/fogo2025.png', bounds:OV.fogo2025, opacity:.95, pixel:true,
-    legItems:[['f','#a81c24','Agosto e setembro'],['f','#e27020','Junho e julho'],['f','#d6b046','Outros meses']]},
+  {id:'s0409', tab:'degradacao', on:true, name:'2004–2009', kind:'poly', color:'#c7a6dc', fill:.8, weight:1,
+    data:{type:'FeatureCollection',features:D.PRODES.features.filter(f=>f.properties.ano<=2009)}, leg:['f','#c7a6dc'], popup:p=>`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',p.ano],['Área',ha(p)]])},
+  {id:'s1014', tab:'degradacao', on:true, name:'2010–2014', kind:'poly', color:'#8a57b3', fill:.8, weight:1,
+    data:{type:'FeatureCollection',features:D.PRODES.features.filter(f=>f.properties.ano>=2010 && f.properties.ano<=2014)}, leg:['f','#8a57b3'], popup:p=>`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',p.ano],['Área',ha(p)]])},
+  {id:'s1617', tab:'degradacao', on:true, name:'2016–2017', kind:'poly', color:'#4a1f73', fill:.85, weight:1,
+    data:{type:'FeatureCollection',features:D.PRODES.features.filter(f=>f.properties.ano>=2015)}, leg:['f','#4a1f73'], popup:p=>`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',p.ano],['Área',ha(p)]])},
+  {id:'sconf', tab:'degradacao', on:true, name:'Supressão confirmada (2019–2024)', desc:'Área aproximada, para preservar o proprietário', kind:'sconf', data:D.VALIDACAO,
+    color:CONF_C, legItems:[['c',CONF_C,'Supressão confirmada (2019–2024)']]},
+  {id:'snc', tab:'degradacao', on:true, name:'Alerta não confirmado (2019–2024)', desc:'Satélite indicou, verificação não confirmou', kind:'snc', data:D.ALERTAS_NC,
+    color:NC_C, legItems:[['n',NC_C,'Alerta não confirmado (2019–2024)']]},
+  {id:'f_agoset', tab:'degradacao', on:true, name:'Agosto e setembro', kind:'image', src:'images/fogo_agoset.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#a81c24', leg:['f','#a81c24']},
+  {id:'f_junjul', tab:'degradacao', on:true, name:'Junho e julho', kind:'image', src:'images/fogo_junjul.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#e27020', leg:['f','#e27020']},
+  {id:'f_outros', tab:'degradacao', on:true, name:'Outros meses', kind:'image', src:'images/fogo_outros.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#d6b046', leg:['f','#d6b046']},
   {id:'incendio', tab:'degradacao', on:true, name:'Incêndio de agosto/2025', desc:'≈203 ha', kind:'poly', data:D.INCENDIO_2025, color:'#1f1a17', fill:.06, weight:2.4, dash:'6 4', leg:['l','#1f1a17'],
     popup:p=>`<div class="pt">Incêndio de agosto de 2025</div><div class="ptxt">Maior evento da série 2022–2025. Atingiu vegetação nativa, APPs e ~21 ha de áreas restauradas no Haras Maripá.</div>${imgs([{src:'images/maripa_fogo.jpg',cap:'Restauração do Haras Maripá (verde/amarelo) x área queimada (laranja)'}])}`+rows([['Área deste polígono',ha(p)]])},
 
@@ -593,8 +605,14 @@ const FONTES = {
   remanescentes:'Inventário Florestal da Vegetação Nativa de SP, 2020 (IPA/SEMIL, DataGeo)',
   app:'Prefeitura de Jaguariúna (DAMA) — faixas do Código Florestal (Lei 12.651/2012)',
   rppn:'ICMBio — Sistema de Monitoria de RPPN (SIMRPPN); Portaria IBAMA 105/2000',
-  supressao:'INPE — PRODES Mata Atlântica, plataforma TerraBrasilis (2026). Verificação dos alertas 2019–2024: Prefeitura (DAMA), imagens históricas do Google Earth e vistoria de jun/2026 (Plano, item 2.1)',
-  fogo2025:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
+  s0409:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
+  s1014:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
+  s1617:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
+  sconf:'Alertas: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth e vistoria de jun/2026 (Plano, item 2.1)',
+  snc:'Alertas: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth (Plano, item 2.1)',
+  f_agoset:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
+  f_junjul:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
+  f_outros:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
   incendio:'Prefeitura de Jaguariúna (DAMA) — delimitação por imagens de satélite e registros de ocorrência',
   vulnerabilidade:'Plano Municipal de Conservação do Solo e da Água no Meio Rural (Jaguariúna, 2024), Mapa 5',
   nasc_protecao:'ANA — Base Hidrográfica Ottocodificada (BHO 2015), pontos de início de curso d’água; faixa de 50 m conforme Lei 12.651/2012',
@@ -667,18 +685,21 @@ L_DEFS.forEach(def=>{
     lyr = L.geoJSON(def.data,{style:()=>({color:def.color, weight:def.weight, opacity:.9}), onEachFeature:bindPop(def)});
   }else if(def.kind==='point'){
     lyr = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:def.radius, color:'#fff', weight:1.3, fillColor:def.color, fillOpacity:.95}), onEachFeature:bindPop(def)});
-  }else if(def.kind==='supr'){
-    const F = html => withFonte(html, def);
-    const antigos = L.geoJSON(D.PRODES,{style:f=>({color:PRODES_C(f.properties.ano), fillColor:PRODES_C(f.properties.ano), weight:1, fillOpacity:.75}),
-      onEachFeature:(f,l)=>l.bindPopup(F(`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',f.properties.ano],['Área',ha(f.properties)]])),{maxWidth:300})});
-    const nc = L.geoJSON(D.ALERTAS_NC,{style:()=>({color:NC_C, weight:1.8, dashArray:'4 3', fillColor:NC_C, fillOpacity:.18}),
+  }else if(def.kind==='sconf'){
+    const halo = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circle(ll,{radius:350, color:'#ffffff', weight:5.5, opacity:.9, fill:false, interactive:false})});
+    const circ = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circle(ll,{radius:350, color:CONF_C, weight:3, dashArray:'7 4', fillColor:CONF_C, fillOpacity:.28}),
       onEachFeature:(f,l)=>{ const p=f.properties;
-        const im = (p.origem.includes('reanálise') && p.ano===2022) ? imgs([{src:'images/alerta_nao_confirmado.jpg',cap:'Série 2021–2023: nenhuma alteração compatível com supressão'}]) : '';
-        l.bindPopup(F(`<div class="pt">Alerta de supressão (${p.ano})</div><span class="pbadge" style="--c:${NC_C}"><i></i>Não confirmado</span><div class="ptxt">O satélite indicou possível supressão, mas a verificação em imagens históricas não confirmou supressão de vegetação nativa.</div>${im}`+rows([['Origem',p.origem]])),{maxWidth:300}); }});
-    const conf = L.geoJSON(D.VALIDACAO,{pointToLayer:(f,ll)=>L.circle(ll,{radius:350, color:CONF_C, weight:2.2, dashArray:'6 4', fillColor:CONF_C, fillOpacity:.15}),
-      onEachFeature:(f,l)=>{ const p=f.properties;
-        l.bindPopup(F(`<div class="pt">Supressão confirmada</div><span class="pbadge" style="--c:${CONF_C}"><i></i>${JUST[p.tipo].t}</span><div class="ptxt">${p.texto}</div>`+rows([['Alerta do satélite',p.alerta],['Referência',p.ref]])+`<div class="src">Área aproximada (círculo de 350 m, deslocado) para preservar o proprietário.</div>`),{maxWidth:300}); }});
-    lyr = L.layerGroup([antigos, nc, conf]);
+        l.bindPopup(withFonte(`<div class="pt">Supressão confirmada</div><span class="pbadge" style="--c:${CONF_C}"><i></i>${JUST[p.tipo].t}</span><div class="ptxt">${p.texto}</div>`+rows([['Alerta do satélite',p.alerta],['Referência',p.ref]])+`<div class="src">Área aproximada (círculo de 350 m, deslocado) para preservar o proprietário.</div>`, def),{maxWidth:300}); }});
+    lyr = L.layerGroup([halo, circ]);
+  }else if(def.kind==='snc'){
+    const pop = f => { const p=f.properties;
+      const im = (p.origem.includes('reanálise') && p.ano===2022) ? imgs([{src:'images/alerta_nao_confirmado.jpg',cap:'Série 2021–2023: nenhuma alteração compatível com supressão'}]) : '';
+      return withFonte(`<div class="pt">Alerta de supressão (${p.ano})</div><span class="pbadge" style="--c:${NC_C}"><i></i>Não confirmado</span><div class="ptxt">O satélite indicou possível supressão, mas a verificação em imagens históricas não confirmou supressão de vegetação nativa.</div>${im}`+rows([['Origem',p.origem]]), def); };
+    const polys = L.geoJSON(def.data,{style:()=>({color:NC_EDGE, weight:2.2, fillColor:NC_C, fillOpacity:.55}),
+      onEachFeature:(f,l)=>l.bindPopup(pop(f),{maxWidth:300})});
+    const marks = L.layerGroup(def.data.features.map(f=>{ const c=L.geoJSON(f).getBounds().getCenter();
+      return L.circleMarker(c,{radius:6, color:'#fff', weight:2, fillColor:NC_C, fillOpacity:1}).bindPopup(pop(f),{maxWidth:300}); }));
+    lyr = L.layerGroup([polys, marks]);
   }else if(def.kind==='image'){
     lyr = L.imageOverlay(def.src, def.bounds, {opacity:def.opacity, pane:'overlays', className:def.pixel?'pix':''});
   }else if(def.kind==='group'){
@@ -754,7 +775,7 @@ function renderLegend(){
   const body = document.getElementById('legendBody');
   body.innerHTML = L_DEFS.filter(d=>map.hasLayer(layers[d.id])).map(d=>{
     const items = d.legItems.map(([k,c,t])=>{
-      const inner = k==='l' ? `<i style="border-color:${c}"></i>` : k==='c' ? `<i style="border-color:${c};background:${c}2e;border-style:dashed"></i>` : k==='n' ? `<i style="border:1.6px dashed ${c};background:${c}2e"></i>` : `<i style="background:${c}"></i>`;
+      const inner = k==='l' ? `<i style="border-color:${c}"></i>` : k==='c' ? `<i style="border-color:${c};background:${c}2e;border-style:dashed"></i>` : k==='n' ? `<i style="border:1.8px solid #053b4c;background:${c}"></i>` : `<i style="background:${c}"></i>`;
       return `<div class="li"><span class="sw ${k}">${inner}</span><span>${t}</span></div>`; }).join('');
     return d.legItems.length>1 ? `<div class="lg">${d.name}</div>${items}` : `<div class="solo">${items}</div>`;
   }).join('');
