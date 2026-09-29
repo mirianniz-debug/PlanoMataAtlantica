@@ -575,7 +575,7 @@ const L_DEFS = [
   {id:'restauracao', tab:'acoes', on:true, name:'Áreas restauradas', desc:'Plantios do Programa Bacias', kind:'poly', data:D.REFLORESTAMENTO,
     style:f=>({color:f.properties.fase===1?'#1f7a44':'#0f8a7e', weight:1.2, fillOpacity:.65}),
     legItems:[['f','#1f7a44','Restauração — 1ª fase'],['f','#0f8a7e','Restauração — 2ª fase']]},
-  {id:'biodigestores', tab:'acoes', on:true, name:'Biodigestores', desc:'Saneamento rural', kind:'point', data:D.BIODIGESTORES, color:'#c98a1f', radius:6, leg:['p','#c98a1f'],
+  {id:'biodigestores', tab:'acoes', on:true, name:'Biodigestores', desc:'Saneamento rural · 20 instalados, 19 no mapa', kind:'point', data:D.BIODIGESTORES, color:'#c98a1f', radius:6, leg:['p','#c98a1f'],
     popup:()=>`<div class="pt">Biodigestor rural</div><div class="ptxt">Trata o esgoto doméstico da propriedade e reduz a carga poluente nos cursos d'água.</div>`},
   {id:'equipamentos', tab:'acoes', on:true, name:'Viveiro e Matrizeiro', desc:'', kind:'icon', data:D.EQUIPAMENTOS,
     legItems:[['p','#2f7d4a','Viveiro Municipal'],['p','#7a5a2e','Matrizeiro de Sementes']]},
@@ -642,11 +642,12 @@ map.createPane('overlays'); map.getPane('overlays').style.zIndex = 390;
 
 const layers = {};
 const FASE_LAYERS = {};
+const BIO_TOTAL = 20; /* total instalado (Plano, item 5.3); a camada tem 19 pontos com localização */
 function fasePopup(fz){
   const haF = fz===1 ? ha1 : ha2;
   return fz===1
     ? `<div class="pt">Programa Bacias — 1ª fase (2014–2021)</div><span class="pbadge" style="--c:#1f7a44"><i></i>Área Piloto · Bacia do Jaguari</span><div class="ptxt">Restauração de APPs e florestas, cercamento e PSA a produtores rurais na região mais vulnerável à erosão, a montante da captação de água.</div>`+rows([['Área restaurada', fmt(haF,0)+' ha'],['PSA pago aos produtores','≈ R$ 100 mil'],['Destaque','Haras Maripá, referência estadual (CETESB, 2026)']])
-    : `<div class="pt">Programa Bacias — 2ª fase (desde 2022)</div><span class="pbadge" style="--c:#0f8a7e"><i></i>Área de Interesse · Bacia do Camanducaia</span><div class="ptxt">Restauração de APPs e florestas, recuperação de nascentes e saneamento rural com biodigestores.</div>`+rows([['Área restaurada', fmt(haF,0)+' ha'],['Biodigestores instalados', D.BIODIGESTORES.features.length]]);
+    : `<div class="pt">Programa Bacias — 2ª fase (desde 2022)</div><span class="pbadge" style="--c:#0f8a7e"><i></i>Área de Interesse · Bacia do Camanducaia</span><div class="ptxt">Restauração de APPs e florestas, recuperação de nascentes e saneamento rural com biodigestores.</div>`+rows([['Área restaurada', fmt(haF,0)+' ha'],['Biodigestores instalados', BIO_TOTAL]]);
 }
 function bindPop(def){
   return (f, lyr) => {
@@ -773,12 +774,12 @@ openTab(startTab);
 
 /* ---------- Números calculados a partir das camadas ---------- */
 document.getElementById('kHa').textContent = fmt(ha1+ha2,0);
-document.getElementById('kBio').textContent = D.BIODIGESTORES.features.length;
+document.getElementById('kBio').textContent = BIO_TOTAL;
 document.getElementById('kNasc').textContent = D.NASCENTES.features.length;
 document.getElementById('kNasc2').textContent = D.NASCENTES.features.length;
 document.getElementById('ph1ha').textContent = fmt(ha1,0)+' ha';
 document.getElementById('ph2ha').textContent = fmt(ha2,0)+' ha';
-document.getElementById('ph2bio').textContent = D.BIODIGESTORES.features.length;
+document.getElementById('ph2bio').textContent = BIO_TOTAL;
 document.querySelectorAll('.mini-row').forEach(b=>b.addEventListener('click',()=>{
   const go = b.dataset.go;
   if(window.innerWidth<=760) document.getElementById('sidebar').classList.remove('open');
