@@ -289,12 +289,12 @@
 
     <div id="tabBody">
       <!-- ===================== 1. MUNICÍPIO ===================== -->
-      <section class="pane active" id="pane-visao" data-fontes="Indicadores: Inventário Florestal SP (2020), área recortada pelo limite municipal; ANA/BHO; SiCAR-SP (08/06/2026); Plano, item 1">
+      <section class="pane active" id="pane-visao" data-fontes="Indicadores: Inventário Florestal SP (2020), área recortada pelo limite municipal; ANA, BHO 2015 (pontos de início de curso d'água); SiCAR-SP (08/06/2026); Plano, item 1">
         <h2>O território</h2>
         <p class="lead">14.145 ha na Região Metropolitana de Campinas, onde a Mata Atlântica encontra o Cerrado. Três rios drenam o município: Jaguari, Camanducaia e Atibaia.</p>
         <div class="kpis">
           <div class="kpi"><div class="n">15,6<small>%</small></div><div class="l">com vegetação nativa (≈2.200 ha)</div></div>
-          <div class="kpi water"><div class="n" id="kNasc">—</div><div class="l">nascentes mapeadas</div></div>
+          <div class="kpi water"><div class="n" id="kNasc">—</div><div class="l">nascentes na base da ANA</div></div>
           <div class="kpi water"><div class="n">95<small>%</small></div><div class="l">da água da cidade vem do Rio Jaguari</div></div>
           <div class="kpi"><div class="n">462</div><div class="l">imóveis rurais no CAR</div></div>
         </div>
@@ -536,8 +536,8 @@ const L_DEFS = [
     popup:p=>`<div class="pt">Bacia do Rio ${p.nome}</div>`+rows([['Área no município', p.ha?fmt(p.ha,0)+' ha':null],['APP florestada · rio principal (50 m)', fmt(p.app_principal,2)+'%'],['APP florestada · afluentes e nascentes', fmt(p.app_afluentes,2)+'%']])},
   {id:'rios', tab:'visao', on:true, name:'Rios e córregos', kind:'line', data:D.RIOS, color:'#2563eb', weight:1.2, leg:['l','#2563eb'],
     popup:p=>`<div class="pt">Rio ou córrego</div>`+rows([['Bacia',p.bacia]])},
-  {id:'nascentes', tab:'visao', on:false, name:'Nascentes', desc:'', kind:'point', data:D.NASCENTES, color:'#0891b2', radius:4, leg:['p','#0891b2'],
-    popup:()=>`<div class="pt">Nascente</div><div class="ptxt">Ponto de início de curso d'água. A APP é o raio de 50 m ao redor.</div>`},
+  {id:'nascentes', tab:'visao', on:false, name:'Nascentes', desc:'Pontos de início de curso d’água (ANA)', kind:'point', data:D.NASCENTES, color:'#0891b2', radius:4, leg:['p','#0891b2'],
+    popup:()=>`<div class="pt">Nascente</div><div class="ptxt">Ponto onde começa um curso d'água na base cartográfica da ANA (estimativa, não verificada em campo). A APP é o raio de 50 m ao redor.</div>`},
   {id:'zonas', tab:'visao', on:false, name:'Uso e ocupação do solo', desc:'Urbana, expansão e rural', kind:'group',
     parts:[{data:D.ZONA_RURAL,color:'#7fae5a',z:'Área rural',ha:'2.879,7 ha'},{data:D.ZONA_EXPANSAO,color:'#dcb04a',z:'Área de expansão urbana',ha:'5.725,1 ha'},{data:D.ZONA_URBANA,color:'#d77f98',z:'Área urbana',ha:'5.540,9 ha'}],
     legItems:[['f','#d77f98','Área urbana'],['f','#dcb04a','Expansão urbana'],['f','#7fae5a','Área rural']]},
@@ -588,7 +588,7 @@ const FONTES = {
   limite:'IBGE — Malha territorial (distrito de Jaguariúna)',
   subbacias:'Prefeitura de Jaguariúna (DAMA) — Plano, Figura 6; APP florestada: Plano, Tabela 2',
   rios:'Prefeitura de Jaguariúna (DAMA) — hidrografia municipal',
-  nascentes:'ANA — Base Hidrográfica Ottocodificada (BHO, 2015)',
+  nascentes:'ANA — Base Hidrográfica Ottocodificada (BHO 2015), pontos de início de curso d’água. Base cartográfica, não verificada em campo',
   zonas:'Prefeitura de Jaguariúna (DAMA) — loteamentos autorizados até mai/2026',
   remanescentes:'Inventário Florestal da Vegetação Nativa de SP, 2020 (IPA/SEMIL, DataGeo)',
   app:'Prefeitura de Jaguariúna (DAMA) — faixas do Código Florestal (Lei 12.651/2012)',
@@ -598,7 +598,7 @@ const FONTES = {
   fogo2025:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
   incendio:'Prefeitura de Jaguariúna (DAMA) — delimitação por imagens de satélite e registros de ocorrência',
   vulnerabilidade:'Plano Municipal de Conservação do Solo e da Água no Meio Rural (Jaguariúna, 2024), Mapa 5',
-  nasc_protecao:'ANA — Base Hidrográfica Ottocodificada (BHO); faixa de 50 m conforme Lei 12.651/2012',
+  nasc_protecao:'ANA — Base Hidrográfica Ottocodificada (BHO 2015), pontos de início de curso d’água; faixa de 50 m conforme Lei 12.651/2012',
   subbacias_contorno:'Prefeitura de Jaguariúna (DAMA) — Plano, Figura 6',
   fases:'Prefeitura (DAMA) — contorno gerado a partir das áreas restauradas do Programa Bacias',
   restauracao:'Programa Bacias Jaguariúna — Prefeitura (DAMA)',
