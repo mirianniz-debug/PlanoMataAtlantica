@@ -357,12 +357,12 @@
         <div class="layers" data-layers="s0409,s1014,s1617,sconf,snc,sna"></div>
         <div class="lsub">Queimadas em 2025 (MapBiomas Fogo)</div>
         <div class="layers" data-layers="f_agoset,f_junjul,f_outros,incendio"></div>
-        <h3>Alertas recentes (2019–2024)</h3>
-        <p class="note">A Prefeitura confere os alertas de satélite do INPE em imagens históricas e em campo:</p>
+        <h3>Supressões recentes (2019–2024): verificação</h3>
+        <p class="note">O INPE mapeia a supressão por satélite (PRODES). Em escala municipal, a Prefeitura verifica cada polígono em imagens de maior resolução e em campo:</p>
         <div class="vchips">
           <div class="vchip" style="--c:#b3261e"><b id="kConf">—</b><span>supressões confirmadas<br><small>mostradas só como área aproximada</small></span></div>
-          <div class="vchip" style="--c:#0090b0"><b id="kNC">—</b><span>alertas não confirmados<br><small>polígono do alerta, sem supressão</small></span></div>
-          <div class="vchip" style="--c:#b0288a;grid-column:1 / -1"><b id="kNA">—</b><span>alertas ainda não avaliados<br><small>resíduos de 2023, a verificar na próxima revisão</small></span></div>
+          <div class="vchip" style="--c:#0090b0"><b id="kNC">—</b><span>não confirmadas<br><small>polígono do INPE, supressão não verificada no local</small></span></div>
+          <div class="vchip" style="--c:#b0288a;grid-column:1 / -1"><b id="kNA">—</b><span>ainda não verificadas<br><small>polígonos de 2023, a verificar na próxima revisão</small></span></div>
         </div>
         <h3>Área queimada por mês</h3>
         <div class="chart" id="fireChart"><div class="tip" id="fireTip"></div></div>
@@ -568,10 +568,10 @@ const L_DEFS = [
     data:{type:'FeatureCollection',features:D.PRODES.features.filter(f=>f.properties.ano>=2015)}, leg:['f','#4a1f73'], popup:p=>`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',p.ano],['Área',ha(p)]])},
   {id:'sconf', tab:'degradacao', on:true, name:'Supressão confirmada (2019–2024)', desc:'Área aproximada, para preservar o proprietário', kind:'sconf', data:D.VALIDACAO,
     color:CONF_C, legItems:[['c',CONF_C,'Supressão confirmada (2019–2024)']]},
-  {id:'snc', tab:'degradacao', on:true, name:'Alerta não confirmado (2019–2024)', desc:'Satélite indicou, verificação não confirmou', kind:'snc', data:D.ALERTAS_NC,
-    color:NC_C, legItems:[['n',NC_C,'Alerta não confirmado (2019–2024)']]},
-  {id:'sna', tab:'degradacao', on:true, name:'Alerta ainda não avaliado (2023)', desc:'Será verificado na próxima revisão do Plano', kind:'sna', data:D.ALERTAS_NA,
-    color:NA_C, legItems:[['m',NA_C,'Alerta ainda não avaliado (2023)']]},
+  {id:'snc', tab:'degradacao', on:true, name:'Supressão não confirmada (2019–2024)', desc:'Mapeada pelo INPE, não confirmada na verificação', kind:'snc', data:D.ALERTAS_NC,
+    color:NC_C, legItems:[['n',NC_C,'Supressão não confirmada (2019–2024)']]},
+  {id:'sna', tab:'degradacao', on:true, name:'Supressão ainda não verificada (2023)', desc:'Será verificado na próxima revisão do Plano', kind:'sna', data:D.ALERTAS_NA,
+    color:NA_C, legItems:[['m',NA_C,'Supressão ainda não verificada (2023)']]},
   {id:'f_agoset', tab:'degradacao', on:true, name:'Agosto e setembro (meses de estiagem)', desc:'≈279 ha queimados', kind:'image', src:'images/fogo_agoset.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#a81c24', leg:['f','#a81c24']},
   {id:'f_junjul', tab:'degradacao', on:true, name:'Junho e julho (início da estiagem)', desc:'≈16 ha queimados', kind:'image', src:'images/fogo_junjul.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#e27020', leg:['f','#e27020']},
   {id:'f_outros', tab:'degradacao', on:true, name:'Outubro a março (período chuvoso)', desc:'≈82 ha queimados', kind:'image', src:'images/fogo_outros.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#d6b046', leg:['f','#d6b046']},
@@ -612,9 +612,9 @@ const FONTES = {
   s0409:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
   s1014:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
   s1617:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
-  sconf:'Alertas: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth e vistoria de jun/2026 (Plano, item 2.1)',
-  sna:'Alertas: INPE — PRODES/TerraBrasilis, reanálise (2026). Situação: Plano, item 2.1',
-  snc:'Alertas: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth (Plano, item 2.1)',
+  sconf:'Mapeamento: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth e vistoria de jun/2026 (Plano, item 2.1)',
+  sna:'Mapeamento: INPE — PRODES/TerraBrasilis, reanálise (2026). Situação: Plano, item 2.1',
+  snc:'Mapeamento: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth (Plano, item 2.1)',
   f_agoset:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
   f_junjul:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
   f_outros:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
@@ -694,19 +694,19 @@ L_DEFS.forEach(def=>{
     const halo = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circle(ll,{radius:350, color:'#ffffff', weight:5.5, opacity:.9, fill:false, interactive:false})});
     const circ = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circle(ll,{radius:350, color:CONF_C, weight:3, dashArray:'7 4', fillColor:CONF_C, fillOpacity:.28}),
       onEachFeature:(f,l)=>{ const p=f.properties;
-        l.bindPopup(withFonte(`<div class="pt">Supressão confirmada</div><span class="pbadge" style="--c:${CONF_C}"><i></i>${JUST[p.tipo].t}</span><div class="ptxt">${p.texto}</div>`+rows([['Alerta do satélite',p.alerta],['Referência',p.ref]])+`<div class="src">Área aproximada (círculo de 350 m, deslocado) para preservar o proprietário.</div>`, def),{maxWidth:300}); }});
+        l.bindPopup(withFonte(`<div class="pt">Supressão confirmada</div><span class="pbadge" style="--c:${CONF_C}"><i></i>${JUST[p.tipo].t}</span><div class="ptxt">${p.texto}</div>`+rows([['Mapeamento INPE',p.alerta],['Referência',p.ref]])+`<div class="src">Área aproximada (círculo de 350 m, deslocado) para preservar o proprietário.</div>`, def),{maxWidth:300}); }});
     lyr = L.layerGroup([halo, circ]);
   }else if(def.kind==='snc'){
     const pop = f => { const p=f.properties;
       const im = (p.origem.includes('reanálise') && p.ano===2022) ? imgs([{src:'images/alerta_nao_confirmado.jpg',cap:'Série 2021–2023: nenhuma alteração compatível com supressão'}]) : '';
-      return withFonte(`<div class="pt">Alerta de supressão (${p.ano})</div><span class="pbadge" style="--c:${NC_C}"><i></i>Não confirmado</span><div class="ptxt">O satélite indicou possível supressão, mas a verificação em imagens históricas não confirmou supressão de vegetação nativa.</div>${im}`+rows([['Origem',p.origem]]), def); };
+      return withFonte(`<div class="pt">Supressão mapeada pelo INPE (${p.ano})</div><span class="pbadge" style="--c:${NC_C}"><i></i>Não confirmado</span><div class="ptxt">O INPE mapeou supressão neste local, mas a verificação em imagens de maior resolução não a confirmou.</div>${im}`+rows([['Origem',p.origem]]), def); };
     const polys = L.geoJSON(def.data,{style:()=>({color:NC_EDGE, weight:2.2, fillColor:NC_C, fillOpacity:.55}),
       onEachFeature:(f,l)=>l.bindPopup(pop(f),{maxWidth:300})});
     const marks = L.layerGroup(def.data.features.map(f=>{ const c=L.geoJSON(f).getBounds().getCenter();
       return L.circleMarker(c,{radius:6, color:'#fff', weight:2, fillColor:NC_C, fillOpacity:1}).bindPopup(pop(f),{maxWidth:300}); }));
     lyr = L.layerGroup([polys, marks]);
   }else if(def.kind==='sna'){
-    const pop = f => withFonte(`<div class="pt">Alerta de supressão (${f.properties.ano})</div><span class="pbadge" style="--c:${NA_C}"><i></i>Ainda não avaliado</span><div class="ptxt">Área indicada pelo INPE na reanálise das imagens. A verificação em imagens históricas ainda não foi feita e está prevista para a próxima revisão do Plano.</div>`+rows([['Origem',f.properties.origem]]), def);
+    const pop = f => withFonte(`<div class="pt">Supressão mapeada pelo INPE (${f.properties.ano})</div><span class="pbadge" style="--c:${NA_C}"><i></i>Ainda não verificada</span><div class="ptxt">Supressão reconhecida pelo INPE na reanálise das imagens. A verificação em imagens de maior resolução ainda não foi feita e está prevista para a próxima revisão do Plano.</div>`+rows([['Origem',f.properties.origem]]), def);
     const polys = L.geoJSON(def.data,{style:()=>({color:NA_EDGE, weight:2.2, fillColor:NA_C, fillOpacity:.55}), onEachFeature:(f,l)=>l.bindPopup(pop(f),{maxWidth:300})});
     const marks = L.layerGroup(def.data.features.map(f=>{ const c=L.geoJSON(f).getBounds().getCenter();
       return L.circleMarker(c,{radius:6, color:'#fff', weight:2, fillColor:NA_C, fillOpacity:1}).bindPopup(pop(f),{maxWidth:300}); }));
