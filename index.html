@@ -574,8 +574,8 @@ const L_DEFS = [
   {id:'limite', name:'Limite municipal', kind:'poly', data:D.LIMITE, color:'#c1421f', fill:0, weight:3, always:true, leg:['l','#c1421f']},
 
   {id:'subbacias', tab:'visao', on:true, name:'Sub-bacias hidrográficas', desc:'Jaguari, Camanducaia e Atibaia', kind:'poly', data:D.SUBBACIAS,
-    style:f=>({color:{Jaguari:'#1d4ed8',Camanducaia:'#0ea5e9',Atibaia:'#7c3aed'}[f.properties.nome], weight:1.5, fillOpacity:.14}),
-    legItems:[['f','#1d4ed8','Bacia do Jaguari'],['f','#0ea5e9','Bacia do Camanducaia'],['f','#7c3aed','Bacia do Atibaia']],
+    style:f=>({color:{Jaguari:'#1d4ed8',Camanducaia:'#c98a12',Atibaia:'#7c3aed'}[f.properties.nome], weight:1.5, fillOpacity:.14}),
+    legItems:[['f','#1d4ed8','Bacia do Jaguari'],['f','#c98a12','Bacia do Camanducaia'],['f','#7c3aed','Bacia do Atibaia']],
     popup:p=>`<div class="pt">Bacia do Rio ${p.nome}</div>`+rows([['Área no município', p.ha?fmt(p.ha,0)+' ha':null],['APP florestada · rio principal (50 m)', fmt(p.app_principal,2)+'%'],['APP florestada · afluentes e nascentes', fmt(p.app_afluentes,2)+'%']])},
   {id:'rios', tab:'visao', on:true, name:'Rios e córregos', kind:'line', data:D.RIOS, color:'#2563eb', weight:1.2, leg:['l','#2563eb'],
     popup:p=>`<div class="pt">Rio ou córrego</div>`+rows([['Bacia',p.bacia]])},
