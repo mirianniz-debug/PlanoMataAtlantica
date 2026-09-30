@@ -234,6 +234,13 @@
   .ico-marker{display:flex;align-items:center;justify-content:center;}
   .ico-marker .dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;
     background:var(--c);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);}
+  /* marcador "tem imagem" (mesmo convite do geoportal Bacias): câmera com pulso */
+  .photo-marker{display:flex;align-items:center;justify-content:center;}
+  .photo-marker .pm-dot{position:relative;width:26px;height:26px;border-radius:50%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #fff;cursor:pointer;}
+  .photo-marker .pm-ring{position:absolute;width:26px;height:26px;border-radius:50%;background:var(--c);opacity:.55;animation:photoPulse 2.2s ease-out infinite;}
+  @keyframes photoPulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(2.1);opacity:0}100%{transform:scale(2.1);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.photo-marker .pm-ring{animation:none;opacity:0}}
 
   /* ---------- Janela "Sobre" e ampliação de imagem ---------- */
   .overlay{position:fixed;inset:0;z-index:3000;background:rgba(16,21,26,.6);display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -251,6 +258,14 @@
   #lightbox img{max-width:94vw;max-height:84vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
   #lightbox .xbtn{position:absolute;top:18px;right:18px;background:rgba(0,0,0,.5);color:#fff;border-color:rgba(255,255,255,.4);}
   #lightbox .cap{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#eef1ea;font:italic 400 12.5px var(--font-body);text-align:center;max-width:90vw;}
+  #lightbox .cap b{font:600 12px var(--font-mono);font-style:normal;margin-right:8px;}
+  /* setas para percorrer as imagens do mesmo popup sem fechar */
+  #lightbox .lbnav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.45);
+    background:rgba(0,0,0,.55);color:#fff;font:400 34px/1 var(--font-body);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 0 4px;z-index:2;}
+  #lightbox .lbnav:hover{background:rgba(0,0,0,.8);}
+  #lightbox .lbnav:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+  #lightbox #lbPrev{left:18px;} #lightbox #lbNext{right:18px;}
+  #lightbox .lbnav[hidden]{display:none;}
 
   @media (max-width:760px){
     header{padding:9px 12px;gap:8px;}
@@ -349,26 +364,25 @@
         <h2>Ameaças à vegetação</h2>
         <p class="lead">As principais pressões são as <b>queimadas</b> e a <b>expansão urbana</b>, que alimenta a especulação imobiliária.</p>
         <div class="kpis">
-          <div class="kpi fire"><div class="n">2,49<small>km²</small></div><div class="l">de floresta nativa suprimida de 2004 a 2024</div></div>
+          <div class="kpi fire"><div class="n">2,53<small>km²</small></div><div class="l">de floresta nativa suprimida de 2004 a 2025</div></div>
           <div class="kpi fire"><div class="n" id="kFogo">380<small>ha</small></div><div class="l">queimados em 2025, o maior valor da série</div></div>
         </div>
         <h3>Camadas</h3>
         <div class="lsub">Supressão de vegetação nativa (PRODES/INPE)</div>
-        <div class="layers" data-layers="s0409,s1014,s1617,sconf,snc,sna"></div>
+        <div class="layers" data-layers="s0409,s1014,s1617,sconf,snc"></div>
         <div class="lsub">Queimadas em 2025 (MapBiomas Fogo)</div>
         <div class="layers" data-layers="f_agoset,f_junjul,f_outros,incendio"></div>
-        <h3>Supressões recentes (2019–2024): verificação</h3>
-        <p class="note">O INPE mapeia a supressão por satélite (PRODES). Em escala municipal, a Prefeitura verifica cada polígono em imagens de maior resolução e em campo:</p>
+        <h3>Supressões recentes (2019–2025): verificação</h3>
+        <p class="note">O INPE mapeia a supressão por satélite (PRODES) em duas camadas: a <b>supressão anual</b>, detectada no próprio ano (8 locais em 2019–2025), e os <b>resíduos</b>, supressões de anos anteriores incluídas depois na série (8 áreas em 2020–2025, duas delas nos mesmos locais da camada anual). A Prefeitura verificou cada polígono em imagens de maior resolução:</p>
         <div class="vchips">
-          <div class="vchip" style="--c:#b3261e"><b id="kConf">—</b><span>supressões confirmadas<br><small>mostradas só como área aproximada</small></span></div>
-          <div class="vchip" style="--c:#0090b0"><b id="kNC">—</b><span>não confirmadas<br><small>polígono do INPE, supressão não verificada no local</small></span></div>
-          <div class="vchip" style="--c:#b0288a;grid-column:1 / -1"><b id="kNA">—</b><span>ainda não verificadas<br><small>polígonos de 2023, a verificar na próxima revisão</small></span></div>
+          <div class="vchip" style="--c:#b3261e"><b id="kConf">—</b><span>locais com supressão confirmada<br><small>área aproximada; localização exata e imagens não divulgadas, por segurança</small></span></div>
+          <div class="vchip" style="--c:#0090b0"><b id="kNC">—</b><span>locais não confirmados<br><small>polígono do INPE, sem supressão de vegetação nativa nas imagens.<br>📷 no mapa: clique para ver as imagens</small></span></div>
         </div>
         <h3>Área queimada por mês</h3>
         <div class="chart" id="fireChart"><div class="tip" id="fireTip"></div></div>
         <button class="tbl-toggle" id="fireTblBtn">Ver tabela</button>
         <div id="fireTbl" hidden></div>
-        <div class="callout"><b>Incêndio de agosto/2025:</b> cerca de 203 ha queimados, incluindo ~21 ha já restaurados no Haras Maripá.</div>
+        <div class="callout"><b>Incêndio de agosto/2025:</b> cerca de 203 ha queimados, incluindo ~21 ha já restaurados no Haras Maripá. 📷 Clique na câmera no mapa para ver o antes e depois.</div>
         <div class="callout"><b>Especulação imobiliária:</b> duas áreas suprimidas seguiam sem uso na vistoria de jun/2026. Loteamentos clandestinos também ameaçam APPs e mananciais.</div>
       </section>
 
@@ -500,7 +514,9 @@
 
 <div class="overlay" id="lightbox" role="dialog" aria-modal="true">
   <button class="xbtn" id="lbClose" aria-label="Fechar">✕</button>
+  <button class="lbnav" id="lbPrev" aria-label="Imagem anterior">‹</button>
   <img id="lbImg" alt="">
+  <button class="lbnav" id="lbNext" aria-label="Próxima imagem">›</button>
   <div class="cap" id="lbCap"></div>
 </div>
 
@@ -522,16 +538,32 @@ const FARM_PHOTOS = {
 };
 const imgs = list => { list = list||[]; if(!list.length) return '';
   if(list.length===1){ const p=list[0]; return `<img class="pimg" src="${p.src}" alt="${p.cap}" data-cap="${p.cap}" loading="lazy"><div class="pcap">${p.cap}</div>`; }
-  return `<div class="pgal">${list.map(p=>`<img class="pimg" src="${p.src}" alt="${p.cap}" data-cap="${p.cap}" title="${p.cap}" loading="lazy">`).join('')}</div><div class="pcap">${list.length} fotos · clique para ampliar</div>`; };
+  return `<div class="pgal">${list.map(p=>`<img class="pimg" src="${p.src}" alt="${p.cap}" data-cap="${p.cap}" title="${p.cap}" loading="lazy">`).join('')}</div><div class="pcap">${list.length} imagens · clique para ampliar</div>`; };
 const rows = arr => arr.filter(r=>r[1]!=null && r[1]!=='').map(r=>`<div class="pr"><b>${r[0]}</b><span class="v">${r[1]}</span></div>`).join('');
 
 /* ---------- Supressão: justificativas das confirmadas ---------- */
 const JUST = {
   nativa:{t:'Vegetação nativa'},
   exotica:{t:'Árvores exóticas (não nativas)'},
-  licenciada:{t:'Loteamento licenciado (autorizado)'}
+  licenciada:{t:'Loteamento licenciado (autorizado)'},
+  loteamento:{t:'Loteamento em implantação (autorização a confirmar)'}
 };
-const CONF_C = '#b3261e', NC_C = '#00a5c8', NC_EDGE = '#053b4c', NA_C = '#d63aa6', NA_EDGE = '#4a0d38';
+const CONF_C = '#b3261e', NC_C = '#00a5c8', NC_EDGE = '#053b4c';
+/* Imagens que mostram a ausência de supressão (chave: camada + nº do Quadro 3/4 do Plano).
+   Resíduo 1: Figura 17 do Plano. Demais: análise multitemporal da Prefeitura (Sentinel-2 e ortofoto). */
+const NC_SERIE = (k, nota) => ({fotos:[{src:`images/${k}_serie.jpg`,cap:'Sentinel-2, estação seca de 2017 a 2026 (polígono do INPE em amarelo)'},{src:`images/${k}_ortofoto.jpg`,cap:'Ortofoto municipal (10 cm), com o polígono do INPE'}],
+  nota:nota+' Imagens: Copernicus Sentinel-2 (ESA) e ortofoto municipal; análise multitemporal da Prefeitura (DAMA).'});
+const FOGO_IMGS = [{src:'images/fogo_antes.jpg',cap:'16/08/2025, antes do incêndio (Sentinel-2)'},{src:'images/fogo_depois.jpg',cap:'30/08/2025, logo após o incêndio (Sentinel-2)'},
+  {src:'images/fogo_2026.jpg',cap:'18/08/2026, um ano depois (Sentinel-2)'},{src:'images/maripa_fogo.jpg',cap:'Restauração do Haras Maripá (verde/amarelo) x área queimada (laranja), Plano, Figura 26'}];
+const NC_ANTES ='Nas imagens anteriores ao ano mapeado pelo INPE, a área já não tinha floresta nativa.';
+const NC_SEM = 'Ao longo de toda a série, a cobertura vegetal não mostra mudança compatível com supressão.';
+const NC_IMGS = {
+  residuo1:{fotos:[{src:'images/residuo1_2021.jpg',cap:'Resíduo 1 em 2021 (Google Earth)'},{src:'images/residuo1_2022.jpg',cap:'Resíduo 1 em 2022, ano atribuído pelo INPE (Google Earth)'},{src:'images/residuo1_2023.jpg',cap:'Resíduo 1 em 2023 (Google Earth)'}],
+    nota:'A cobertura vegetal no círculo não muda entre 2021 e 2023: não houve supressão no período (Plano, Figura 17).'},
+  anual1:NC_SERIE('anual1',NC_ANTES), anual2:NC_SERIE('anual2',NC_ANTES), anual3:NC_SERIE('anual3',NC_ANTES),
+  anual5:NC_SERIE('anual5',NC_ANTES), anual7:NC_SERIE('anual7',NC_ANTES),
+  residuo3:NC_SERIE('residuo3',NC_SEM), residuo6:NC_SERIE('residuo6',NC_SEM)
+};
 
 /* ---------- Definição das camadas ----------
    kind: poly | line | point | circle | image | icon
@@ -566,17 +598,15 @@ const L_DEFS = [
     data:{type:'FeatureCollection',features:D.PRODES.features.filter(f=>f.properties.ano>=2010 && f.properties.ano<=2014)}, leg:['f','#8a57b3'], popup:p=>`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',p.ano],['Área',ha(p)]])},
   {id:'s1617', tab:'degradacao', on:true, name:'2016–2017', kind:'poly', color:'#4a1f73', fill:.85, weight:1,
     data:{type:'FeatureCollection',features:D.PRODES.features.filter(f=>f.properties.ano>=2015)}, leg:['f','#4a1f73'], popup:p=>`<div class="pt">Supressão de vegetação nativa</div>`+rows([['Ano',p.ano],['Área',ha(p)]])},
-  {id:'sconf', tab:'degradacao', on:true, name:'Supressão confirmada (2019–2024)', desc:'Área aproximada, para preservar o proprietário', kind:'sconf', data:D.VALIDACAO,
-    color:CONF_C, legItems:[['c',CONF_C,'Supressão confirmada (2019–2024)']]},
-  {id:'snc', tab:'degradacao', on:true, name:'Supressão não confirmada (2019–2024)', desc:'Mapeada pelo INPE, não confirmada na verificação', kind:'snc', data:D.ALERTAS_NC,
-    color:NC_C, legItems:[['n',NC_C,'Supressão não confirmada (2019–2024)']]},
-  {id:'sna', tab:'degradacao', on:true, name:'Supressão ainda não verificada (2023)', desc:'Será verificado na próxima revisão do Plano', kind:'sna', data:D.ALERTAS_NA,
-    color:NA_C, legItems:[['m',NA_C,'Supressão ainda não verificada (2023)']]},
+  {id:'sconf', tab:'degradacao', on:true, name:'Supressão confirmada (2019–2025)', desc:'Área aproximada, para preservar o proprietário', kind:'sconf', data:D.VALIDACAO,
+    color:CONF_C, legItems:[['c',CONF_C,'Supressão confirmada (2019–2025)']]},
+  {id:'snc', tab:'degradacao', on:true, name:'Supressão não confirmada (2019–2025)', desc:'Mapeada pelo INPE, não confirmada na verificação', kind:'snc', data:D.ALERTAS_NC,
+    color:NC_C, legItems:[['n',NC_C,'Supressão não confirmada (2019–2025)'],['m',NC_C,'Com imagens da verificação (clique)']]},
   {id:'f_agoset', tab:'degradacao', on:true, name:'Agosto e setembro (meses de estiagem)', desc:'≈279 ha queimados', kind:'image', src:'images/fogo_agoset.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#a81c24', leg:['f','#a81c24']},
   {id:'f_junjul', tab:'degradacao', on:true, name:'Junho e julho (início da estiagem)', desc:'≈16 ha queimados', kind:'image', src:'images/fogo_junjul.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#e27020', leg:['f','#e27020']},
   {id:'f_outros', tab:'degradacao', on:true, name:'Outubro a março (período chuvoso)', desc:'≈82 ha queimados', kind:'image', src:'images/fogo_outros.png', bounds:OV.fogo2025, opacity:.95, pixel:true, color:'#d6b046', leg:['f','#d6b046']},
-  {id:'incendio', tab:'degradacao', on:true, name:'Incêndio de agosto/2025', desc:'≈203 ha', kind:'poly', data:D.INCENDIO_2025, color:'#1f1a17', fill:.06, weight:2.4, dash:'6 4', leg:['l','#1f1a17'],
-    popup:p=>`<div class="pt">Incêndio de agosto de 2025</div><div class="ptxt">Maior evento da série 2022–2025. Atingiu vegetação nativa, APPs e ~21 ha de áreas restauradas no Haras Maripá.</div>${imgs([{src:'images/maripa_fogo.jpg',cap:'Restauração do Haras Maripá (verde/amarelo) x área queimada (laranja)'}])}`+rows([['Área deste polígono',ha(p)]])},
+  {id:'incendio', tab:'degradacao', on:true, name:'Incêndio de agosto/2025', desc:'≈203 ha', kind:'incendio', data:D.INCENDIO_2025, color:'#1f1a17', fill:.06, weight:2.4, dash:'6 4', leg:['l','#1f1a17'],
+    popup:p=>`<div class="pt">Incêndio de agosto de 2025</div><div class="ptxt">Maior evento da série 2022–2025. Atingiu vegetação nativa, APPs e ~21 ha de áreas restauradas no Haras Maripá.</div>${imgs(FOGO_IMGS)}<div class="pcap">Antes e depois: imagens Copernicus Sentinel-2 (ESA) de 16/08/2025, 30/08/2025 e 18/08/2026, com o contorno da área queimada em amarelo. A 4ª imagem é a Figura 26 do Plano.</div>`+(p?rows([['Área deste polígono',ha(p)]]):'')},
 
   {id:'vulnerabilidade', tab:'prioridades', on:true, name:'Vulnerabilidade à erosão hídrica', desc:'Da muito baixa à muito alta', kind:'image', src:'images/vulnerabilidade.png', bounds:OV.vulnerabilidade, opacity:.85,
     legItems:[['f','#c02424','Muito alta'],['f','#e67c28','Alta'],['f','#f0d03c','Média'],['f','#66aa5a','Baixa'],['f','#2b6cb0','Muito baixa'],['f','#969696','Área urbanizada']]},
@@ -612,9 +642,8 @@ const FONTES = {
   s0409:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
   s1014:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
   s1617:'INPE — PRODES Mata Atlântica, TerraBrasilis (2026)',
-  sconf:'Mapeamento: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth e vistoria de jun/2026 (Plano, item 2.1)',
-  sna:'Mapeamento: INPE — PRODES/TerraBrasilis, reanálise (2026). Situação: Plano, item 2.1',
-  snc:'Mapeamento: INPE — PRODES/TerraBrasilis (2026). Verificação: Prefeitura (DAMA), imagens históricas do Google Earth (Plano, item 2.1)',
+  sconf:'Mapeamento: INPE — PRODES/TerraBrasilis (2026), supressão anual e resíduos. Verificação: Prefeitura (DAMA), imagens históricas do Google Earth, Sentinel-2, ortofoto municipal e vistoria de jun/2026 (Plano, Quadros 3 e 4)',
+  snc:'Mapeamento: INPE — PRODES/TerraBrasilis (2026), supressão anual e resíduos. Verificação: Prefeitura (DAMA), imagens históricas do Google Earth, Sentinel-2 e ortofoto municipal (Plano, Quadros 3 e 4)',
   f_agoset:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
   f_junjul:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
   f_outros:'MapBiomas Fogo — Coleção 10, área queimada mensal (acesso em 16/06/2026)',
@@ -694,23 +723,33 @@ L_DEFS.forEach(def=>{
     const halo = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circle(ll,{radius:350, color:'#ffffff', weight:5.5, opacity:.9, fill:false, interactive:false})});
     const circ = L.geoJSON(def.data,{pointToLayer:(f,ll)=>L.circle(ll,{radius:350, color:CONF_C, weight:3, dashArray:'7 4', fillColor:CONF_C, fillOpacity:.28}),
       onEachFeature:(f,l)=>{ const p=f.properties;
-        l.bindPopup(withFonte(`<div class="pt">Supressão confirmada</div><span class="pbadge" style="--c:${CONF_C}"><i></i>${JUST[p.tipo].t}</span><div class="ptxt">${p.texto}</div>`+rows([['Mapeamento INPE',p.alerta],['Referência',p.ref]])+`<div class="src">Área aproximada (círculo de 350 m, deslocado) para preservar o proprietário.</div>`, def),{maxWidth:300}); }});
+        l.bindPopup(withFonte(`<div class="pt">Supressão confirmada</div><span class="pbadge" style="--c:${CONF_C}"><i></i>${JUST[p.tipo].t}</span><div class="ptxt">${p.texto}</div>`+rows([['Camada PRODES',p.camada],['Referência',p.ref]])+`<div class="src">Por motivos de segurança e para preservar o proprietário, a localização exata e as imagens desta área não são divulgadas. O círculo (350 m, deslocado) indica apenas a região.</div>`, def),{maxWidth:300}); }});
     lyr = L.layerGroup([halo, circ]);
   }else if(def.kind==='snc'){
-    const pop = f => { const p=f.properties;
-      const im = (p.origem.includes('reanálise') && p.ano===2022) ? imgs([{src:'images/alerta_nao_confirmado.jpg',cap:'Série 2021–2023: nenhuma alteração compatível com supressão'}]) : '';
-      return withFonte(`<div class="pt">Supressão mapeada pelo INPE (${p.ano})</div><span class="pbadge" style="--c:${NC_C}"><i></i>Não confirmado</span><div class="ptxt">O INPE mapeou supressão neste local, mas a verificação em imagens de maior resolução não a confirmou.</div>${im}`+rows([['Origem',p.origem]]), def); };
+    const pop = f => { const p=f.properties, anual = p.camada==='anual';
+      const fotos = NC_IMGS[p.camada+p.num];
+      const im = fotos ? imgs(fotos.fotos)+`<div class="pcap">${fotos.nota}</div>` : '';
+      const ref = anual ? 'Plano, Quadro 3' : (p.num===1 ? 'Plano, Quadro 4; Figura 17' : 'Plano, Quadro 4');
+      return withFonte(`<div class="pt">Supressão mapeada pelo INPE (${p.ano})</div><span class="pbadge" style="--c:${NC_C}"><i></i>Não confirmada</span><div class="ptxt">${p.motivo.replace('Não confirmada: ','').replace(/^./,c=>c.toUpperCase())}.</div>${im}`
+        +rows([['Camada PRODES', anual ? 'Supressão anual' : 'Resíduo de supressão'],['No Plano', (anual?'Local ':'Resíduo ')+p.num],['Área',p.area+' ha'],['Referência',ref]]), def); };
     const polys = L.geoJSON(def.data,{style:()=>({color:NC_EDGE, weight:2.2, fillColor:NC_C, fillOpacity:.55}),
       onEachFeature:(f,l)=>l.bindPopup(pop(f),{maxWidth:300})});
-    const marks = L.layerGroup(def.data.features.map(f=>{ const c=L.geoJSON(f).getBounds().getCenter();
+    /* um marcador por local (o local 7 tem dois polígonos) */
+    const vistos = new Set();
+    const marks = L.layerGroup(def.data.features.filter(f=>{ const k=f.properties.camada+f.properties.num; return !vistos.has(k) && vistos.add(k); }).map(f=>{
+      const c=L.geoJSON(f).getBounds().getCenter();
+      if(NC_IMGS[f.properties.camada+f.properties.num])  /* com imagens: câmera com pulso, como no geoportal Bacias */
+        return L.marker(c,{icon:L.divIcon({className:'photo-marker',html:`<div class="pm-ring" style="--c:${NC_C}"></div><div class="pm-dot" style="--c:${NC_C}">📷</div>`,iconSize:[30,30],iconAnchor:[15,15]}), zIndexOffset:400})
+          .bindTooltip('Clique para ver as imagens',{direction:'top',offset:[0,-14]}).bindPopup(pop(f),{maxWidth:300});
       return L.circleMarker(c,{radius:6, color:'#fff', weight:2, fillColor:NC_C, fillOpacity:1}).bindPopup(pop(f),{maxWidth:300}); }));
     lyr = L.layerGroup([polys, marks]);
-  }else if(def.kind==='sna'){
-    const pop = f => withFonte(`<div class="pt">Supressão mapeada pelo INPE (${f.properties.ano})</div><span class="pbadge" style="--c:${NA_C}"><i></i>Ainda não verificada</span><div class="ptxt">Supressão reconhecida pelo INPE na reanálise das imagens. A verificação em imagens de maior resolução ainda não foi feita e está prevista para a próxima revisão do Plano.</div>`+rows([['Origem',f.properties.origem]]), def);
-    const polys = L.geoJSON(def.data,{style:()=>({color:NA_EDGE, weight:2.2, fillColor:NA_C, fillOpacity:.55}), onEachFeature:(f,l)=>l.bindPopup(pop(f),{maxWidth:300})});
-    const marks = L.layerGroup(def.data.features.map(f=>{ const c=L.geoJSON(f).getBounds().getCenter();
-      return L.circleMarker(c,{radius:6, color:'#fff', weight:2, fillColor:NA_C, fillOpacity:1}).bindPopup(pop(f),{maxWidth:300}); }));
-    lyr = L.layerGroup([polys, marks]);
+  }else if(def.kind==='incendio'){
+    /* polígonos + câmera na maior área queimada (antes/depois no popup) */
+    const polys = L.geoJSON(def.data,{style:()=>({color:def.color, weight:def.weight, fillColor:def.color, fillOpacity:def.fill, dashArray:def.dash}), onEachFeature:bindPop(def)});
+    const maior = def.data.features.reduce((a,b)=>(b.properties._ha||0)>(a.properties._ha||0)?b:a);
+    const cam = L.marker(L.geoJSON(maior).getBounds().getCenter(),{icon:L.divIcon({className:'photo-marker',html:'<div class="pm-ring" style="--c:#a81c24"></div><div class="pm-dot" style="--c:#a81c24">📷</div>',iconSize:[30,30],iconAnchor:[15,15]}), zIndexOffset:400})
+      .bindTooltip('Clique para ver o antes e depois',{direction:'top',offset:[0,-14]}).bindPopup(withFonte(def.popup(null), def),{maxWidth:300});
+    lyr = L.layerGroup([polys, cam]);
   }else if(def.kind==='image'){
     lyr = L.imageOverlay(def.src, def.bounds, {opacity:def.opacity, pane:'overlays', className:def.pixel?'pix':''});
   }else if(def.kind==='group'){
@@ -786,7 +825,7 @@ function renderLegend(){
   const body = document.getElementById('legendBody');
   body.innerHTML = L_DEFS.filter(d=>map.hasLayer(layers[d.id])).map(d=>{
     const items = d.legItems.map(([k,c,t])=>{
-      const inner = k==='l' ? `<i style="border-color:${c}"></i>` : k==='c' ? `<i style="border-color:${c};background:${c}2e;border-style:dashed"></i>` : k==='n' ? `<i style="border:1.8px solid #053b4c;background:${c}"></i>` : k==='m' ? `<i style="border:1.8px solid #4a0d38;background:${c}"></i>` : `<i style="background:${c}"></i>`;
+      const inner = k==='l' ? `<i style="border-color:${c}"></i>` : k==='c' ? `<i style="border-color:${c};background:${c}2e;border-style:dashed"></i>` : k==='n' ? `<i style="border:1.8px solid #053b4c;background:${c}"></i>` : k==='m' ? `<i style="background:${c};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-style:normal;line-height:1">📷</i>` : `<i style="background:${c}"></i>`;
       return `<div class="li"><span class="sw ${k}">${inner}</span><span>${t}</span></div>`; }).join('');
     return d.legItems.length>1 ? `<div class="lg">${d.name}</div>${items}` : `<div class="solo">${items}</div>`;
   }).join('');
@@ -836,11 +875,8 @@ document.querySelectorAll('.ph-go').forEach(b=>b.addEventListener('click',()=>{
   map.once('moveend',()=>fl.lab.openPopup());
 }));
 document.getElementById('kConf').textContent = D.VALIDACAO.features.length;
-{ /* conta locais distintos: polígonos a menos de ~300 m entre si contam como um só alerta */
-  const cs = D.ALERTAS_NC.features.map(f=>{ const b=L.geoJSON(f).getBounds().getCenter(); return [b.lat,b.lng]; });
-  const locs = []; cs.forEach(c=>{ if(!locs.some(l=>Math.abs(l[0]-c[0])<0.003 && Math.abs(l[1]-c[1])<0.003)) locs.push(c); });
-  document.getElementById('kNC').textContent = locs.length; }
-document.getElementById('kNA').textContent = D.ALERTAS_NA.features.length;
+/* conta locais distintos (numeração dos Quadros 3 e 4 do Plano) */
+document.getElementById('kNC').textContent = new Set(D.ALERTAS_NC.features.map(f=>f.properties.camada+f.properties.num)).size;
 
 /* ---------- Gráfico: área queimada por mês (pequenos múltiplos) ---------- */
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -887,10 +923,25 @@ const FOGO = {
 
 /* ---------- Ampliar imagem dos popups ---------- */
 const lb = document.getElementById('lightbox');
+let lbList = [], lbIdx = 0;   /* imagens do popup aberto, para as setas ‹ › */
+const lbShow = i=>{
+  lbIdx = (i + lbList.length) % lbList.length; const im = lbList[lbIdx], multi = lbList.length > 1;
+  document.getElementById('lbImg').src = im.src; document.getElementById('lbImg').alt = im.dataset.cap||'';
+  document.getElementById('lbCap').innerHTML = (multi ? `<b>${lbIdx+1} / ${lbList.length}</b>` : '') + (im.dataset.cap||'');
+  document.getElementById('lbPrev').hidden = document.getElementById('lbNext').hidden = !multi;
+};
 map.on('popupopen', e=>{
-  e.popup.getElement().querySelectorAll('.pimg').forEach(im=>im.addEventListener('click',()=>{
-    document.getElementById('lbImg').src = im.src; document.getElementById('lbCap').textContent = im.dataset.cap||'';
-    lb.classList.add('open'); document.getElementById('lbClose').focus(); }));
+  const ims = [...e.popup.getElement().querySelectorAll('.pimg')];
+  ims.forEach((im,i)=>im.addEventListener('click',()=>{
+    lbList = ims; lbShow(i);
+    lb.classList.add('open'); document.getElementById(ims.length>1?'lbNext':'lbClose').focus(); }));
+});
+document.getElementById('lbPrev').addEventListener('click', ()=>lbShow(lbIdx-1));
+document.getElementById('lbNext').addEventListener('click', ()=>lbShow(lbIdx+1));
+document.addEventListener('keydown', e=>{
+  if(!lb.classList.contains('open') || lbList.length<2) return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); lbShow(lbIdx+1); }
+  if(e.key==='ArrowLeft'){ e.preventDefault(); lbShow(lbIdx-1); }
 });
 const closeLb = ()=>lb.classList.remove('open');
 document.getElementById('lbClose').addEventListener('click', closeLb);
